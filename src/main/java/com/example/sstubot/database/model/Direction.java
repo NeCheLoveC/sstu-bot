@@ -24,5 +24,4 @@ public class Direction
         this.name = name;
         this.institute = institute;
     }
-
 }
