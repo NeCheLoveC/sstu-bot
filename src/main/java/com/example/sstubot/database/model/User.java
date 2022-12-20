@@ -2,6 +2,9 @@ package com.example.sstubot.database.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 @Entity
 @Table(indexes = {@Index(unique = true, columnList = "")}, name = "'user'")
 public class User
@@ -12,6 +15,9 @@ public class User
 
     @Column(name = "unique_code")
     protected String uniqueCode;
+
+    @OneToMany
+    protected Collection<Claim> claims = new ArrayList();
 
     public User(){};
 
