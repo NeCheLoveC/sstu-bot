@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class InstituteService
 {
-    InstituteRepository instituteRepository;
+    protected InstituteRepository instituteRepository;
 
     @Autowired
     public InstituteService(InstituteRepository instituteRepository) {
