@@ -2,9 +2,7 @@ package com.example.sstubot.database.model;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 
 @Entity
 @Table
@@ -14,11 +12,11 @@ public class Institute
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     protected Long id;
 
-    @Column(name = "name")
+    @Column(name = "name", unique = true)
     protected String name;
 
-    @OneToMany(mappedBy = "institute", cascade = CascadeType.PERSIST)
-    protected Collection<Direction> directions = new ArrayList<>();
+    @OneToMany(mappedBy = "institute")
+    protected Set<Direction> directions = new HashSet<>();
 
     public Institute(){}
 
@@ -26,7 +24,7 @@ public class Institute
         return id;
     }
 
-    public Collection<Direction> getDirections() {
+    public Set<Direction> getDirections() {
         return directions;
     }
 

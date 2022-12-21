@@ -8,8 +8,10 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 @Component
 public class InstitutesLoad
@@ -21,10 +23,13 @@ public class InstitutesLoad
     @Autowired
     public InstitutesLoad(InstituteService instituteService) {
         this.instituteService = instituteService;
+        //this.instituteHashMap = new HashMap<>();
     }
 
-    public void load()
+    @Transactional
+    public HashMap<String, Institute> load()
     {
+        HashMap<String, Institute> result = new HashMap<>();
         try {
             Document document = Jsoup.connect(urlListOfDirections).get();
             Elements elements = document.getElementsByClass("table-structure-subtitle");
@@ -33,12 +38,14 @@ public class InstitutesLoad
             {
                 Institute institute = new Institute();
                 institute.setName(element.text());
-                instituteService.save(institute);
+                result.put(institute.getName(),institute);
+                //instituteService.save(institute);
             }
         }
         catch (IOException err){
             //отправить в лог
             System.out.println(err);
         }
+        return result;
     }
 }
