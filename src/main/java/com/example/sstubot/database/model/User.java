@@ -32,4 +32,15 @@ public class User
     public Long getId() {
         return id;
     }
+
+    public void addClaim(Claim claim)
+    {
+        this.claims.add(claim);
+    }
+
+    public void addClaim(Collection<Claim> claim)
+    {
+        for(Claim obj : claim)
+            this.claims.add(obj);
+    }
 }

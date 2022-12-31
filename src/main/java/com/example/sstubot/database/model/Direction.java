@@ -1,5 +1,6 @@
 package com.example.sstubot.database.model;
 
+import com.example.sstubot.database.model.urils.DirectionType;
 import jakarta.persistence.*;
 
 @Entity
@@ -39,8 +40,18 @@ public class Direction
     @Column(name = "abbreviation")
     protected String abbreviation;
 
-    @Column(name = "url_to_list_of_claims")
+    @Column(name = "url_to_list_of_claims_budget")
     protected String urlToListOfClaims;
+
+    @Column(name = "url_to_list_of_claims_commerce")
+    protected String urlToListOfClaimsCommerce;
+
+    /*
+    @Enumerated(EnumType.STRING)
+    @Column(name = "direction_type_payment")
+    protected DirectionType directionTypePayment;
+
+     */
 
     @Transient
     protected int reservedUnusualQuota = 0;
@@ -170,4 +181,23 @@ public class Direction
     public void setUrlToListOfClaims(String urlToListOfClaims) {
         this.urlToListOfClaims = urlToListOfClaims;
     }
+
+    public String getUrlToListOfClaimsCommerce() {
+        return urlToListOfClaimsCommerce;
+    }
+
+    public void setUrlToListOfClaimsCommerce(String urlToListOfClaimsCommerce) {
+        this.urlToListOfClaimsCommerce = urlToListOfClaimsCommerce;
+    }
+
+    /*
+    public DirectionType getDirectionTypePayment() {
+        return directionTypePayment;
+    }
+
+    public void setDirectionTypePayment(DirectionType directionTypePayment) {
+        this.directionTypePayment = directionTypePayment;
+    }
+
+     */
 }

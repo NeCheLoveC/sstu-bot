@@ -23,4 +23,20 @@ public class UserService
     {
         return userRepository.save(user);
     }
+
+    public User getUserById(Long id)
+    {
+        return userRepository.findById(id).get();
+    }
+
+    public boolean userExist(String uniqueCode)
+    {
+        return userRepository.existsByUniqueCode(uniqueCode);
+    }
+
+    public User getUserByUniqueCode(String uniqueCode)
+    {
+        return userRepository.getUserByUniqueCode(uniqueCode);
+    }
+
 }

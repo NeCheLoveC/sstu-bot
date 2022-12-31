@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 @Component
 public class DirectionLoad
@@ -21,6 +23,7 @@ public class DirectionLoad
     DirectionService directionService;
     InstituteService instituteService;
 
+    protected final String domainUrl = "https://abitur.sstu.ru/";
     @Autowired
     public DirectionLoad(DirectionService directionService, InstituteService instituteService)
     {
@@ -29,8 +32,9 @@ public class DirectionLoad
     }
 
     @Transactional
-    public void load(HashMap<String, Institute> instituteHashMap)
+    public List<Direction> load(HashMap<String, Institute> instituteHashMap)
     {
+        List<Direction> listOfDirections = new LinkedList<>();
         try
         {
             Document document = Jsoup.connect(InstitutesLoad.urlListOfDirections).get();
@@ -46,7 +50,9 @@ public class DirectionLoad
                 {
                     institute = instituteHashMap.get(el.select("th.table-structure-subtitle").first().text());
                     if(institute != null)
+                    {
                         instituteService.save(institute);
+                    }
                 }
                 else
                 {
@@ -58,14 +64,17 @@ public class DirectionLoad
                         Elements valuesOfDirection = el.children();
                         direction.setName(valuesOfDirection.get(0).text());
                         direction.setInstitute(institute);
-                        Element test = valuesOfDirection.get(1).selectFirst("*");
+                        //Element test = valuesOfDirection.get(1).selectFirst("*");
                         direction.setAbbreviation(valuesOfDirection.get(1).select("nobr").text());
                         direction.setAmountMainBudgetIntoPlan(Integer.valueOf(valuesOfDirection.get(2).text()));
                         direction.setAmountUnusualQuota(Integer.valueOf(valuesOfDirection.get(6).text()));
                         direction.setAmountSpecialQuota(Integer.valueOf(valuesOfDirection.get(8).text()));
                         direction.setAmountTargetQuota(Integer.valueOf(valuesOfDirection.get(10).text()));
                         direction.setAmountBudget(Integer.valueOf(valuesOfDirection.get(12).text()));
+                        direction.setUrlToListOfClaims(domainUrl + valuesOfDirection.get(14).selectFirst("a").attr("href"));
+                        direction.setUrlToListOfClaimsCommerce(domainUrl + valuesOfDirection.get(17).selectFirst("a").attr("href"));
                         directionService.save(direction);
+                        listOfDirections.add(direction);
                         //institute.addDirection(direction);
                     }
 
@@ -78,6 +87,7 @@ public class DirectionLoad
             //Добавляем ошибку в лог
             System.out.println(err.getMessage());
         }
+        return listOfDirections;
     }
 
     private boolean isInstitute(Element element)
