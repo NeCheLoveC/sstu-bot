@@ -4,9 +4,11 @@ import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 @Entity
-@Table(indexes = {@Index(unique = true, columnList = "")}, name = "'user'")
+@Table(indexes = {@Index(unique = true, columnList = "'unique_code'")}, name = "'user'")
 public class User
 {
     @Id
@@ -15,11 +17,28 @@ public class User
 
     @Column(name = "unique_code")
     protected String uniqueCode;
-
-    @OneToMany
-    protected Collection<Claim> claims = new ArrayList();
+    @OneToMany(mappedBy = "user")
+    protected ArrayList<Claim> claims = new ArrayList();
+    @OneToMany(mappedBy = "direction")
+    protected List<ClaimPriorities> priorities = new LinkedList<>();
 
     public User(){};
+
+    public ArrayList<Claim> getClaims() {
+        return claims;
+    }
+
+    public void setClaims(ArrayList<Claim> claims) {
+        this.claims = claims;
+    }
+
+    public List<ClaimPriorities> getPriorities() {
+        return priorities;
+    }
+
+    public void setPriorities(List<ClaimPriorities> priorities) {
+        this.priorities = priorities;
+    }
 
     public String getUniqueCode() {
         return uniqueCode;
@@ -33,6 +52,11 @@ public class User
         return id;
     }
 
+    public void addPriorities(ClaimPriorities priorities)
+    {
+        this.priorities.add(priorities);
+    }
+
     public void addClaim(Claim claim)
     {
         this.claims.add(claim);
@@ -42,5 +66,16 @@ public class User
     {
         for(Claim obj : claim)
             this.claims.add(obj);
+    }
+
+    public void fillClaim(Claim claim)
+    {
+        for(Claim c : claims)
+        {
+            if(c.equals(claim))
+            {
+                c.setScoreList(claim.getScoreList());
+            }
+        }
     }
 }

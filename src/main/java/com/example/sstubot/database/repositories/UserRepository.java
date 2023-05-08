@@ -10,7 +10,7 @@ public interface UserRepository extends JpaRepository<User, Long>
 {
     @Query("select (count(u) > 0) from User u where lower(u.uniqueCode) like lower(:uniqueCode)")
     public boolean existsByUniqueCode(String uniqueCode);
-
+    @Query("select u from User u where u.uniqueCode ilike :uniqueCode")
     public User getUserByUniqueCode(String uniqueCode);
 
 }

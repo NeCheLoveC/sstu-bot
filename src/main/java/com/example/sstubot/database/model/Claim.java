@@ -1,66 +1,60 @@
 package com.example.sstubot.database.model;
 
+import com.example.sstubot.database.model.urils.ClaimType;
 import jakarta.persistence.*;
+import org.hibernate.Hibernate;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Entity
-@Table
-public class Claim
-{
+@Table(name = "Claim")
+public class Claim {
     @Id
     @EmbeddedId
     protected PrimaryKey id = new PrimaryKey();
-
-    @Column(name = "user_id", insertable = false, updatable = false)
-    protected Long userId;
-
-    @Column(name = "direction_id", insertable = false, updatable = false)
-    protected Long directionId;
-
+    @ManyToOne
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    protected User user;
+    @ManyToOne
+    @JoinColumn(name = "direction_id", insertable = false, updatable = false)
+    protected Direction direction;
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "claim_type", insertable = false, updatable = false)
+    protected ClaimType claimType;
     @Column(name = "countScore_for_individual_achievements")
     protected int countScoreForIndividualAchievements = 0;
-
     // TODO: 25.12.2022 ПЕРЕИМЕНОВАТЬ 
     @Column(name = "champion")
     protected boolean champion = false;
 
     @OneToMany(mappedBy = "claim")
-    protected Set<Score> scoreList = new HashSet<>();
+    protected List<Score> scoreList = new LinkedList<>();
 
     protected Claim(){}
 
-    public Claim(User user, Direction direction) {
-        this.id.user = user;
-        this.id.direction = direction;
+    public Claim(User user, Direction direction, ClaimType claimType) {
+        this.id.userId = user.getId();
+        this.id.directionId = direction.getId();
+        this.id.claimType = claimType;
 
-        this.userId = user.id;;
-        this.directionId = direction.getId();
+        this.user = user;;
+        this.direction = direction;
+        this.claimType = claimType;
     }
 
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public Direction getDirection() {
+        return direction;
     }
 
-    public Long getDirectionId() {
-        return directionId;
-    }
-
-    public void setDirectionId(Long directionId) {
-        this.directionId = directionId;
-    }
-
-    public Set<Score> getScoreList() {
+    public List<Score> getScoreList() {
         return scoreList;
     }
 
-    public void setScoreList(Set<Score> scoreList) {
+    public void setScoreList(List<Score> scoreList) {
         this.scoreList = scoreList;
     }
 
@@ -92,5 +86,40 @@ public class Claim
 
     public void setChampion(boolean champion) {
         this.champion = champion;
+    }
+
+    public ClaimType getClaimType() {
+        return claimType;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void setDirection(Direction direction) {
+        this.direction = direction;
+    }
+
+    public void setClaimType(ClaimType claimType) {
+        this.claimType = claimType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        Claim claim = (Claim) o;
+        return getId() != null && Objects.equals(getId(), claim.getId())
+                && getId() != null && Objects.equals(getId(), claim.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    public boolean isBudget()
+    {
+        return claimType == ClaimType.COMMERCE_GENERAL_LIST ? false : true;
     }
 }

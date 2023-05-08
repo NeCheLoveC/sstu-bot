@@ -18,6 +18,10 @@ public class Exam
 
     public Exam(){}
 
+    public Exam(String name) {
+        this.name = name;
+    }
+
     public String getName() {
         return name;
     }

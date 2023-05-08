@@ -27,10 +27,9 @@ public class LoadEntities {
     {
         HashMap<String, Institute> instituteHashMap =  institutesLoad.load();
         List<Direction> directionList = directionLoad.load(instituteHashMap);
-        //for(Direction direction : directionList)
-        //{
-            //userLoad.loadBudget(direction.getUrlToListOfClaims(),direction);
-       // }
-
+        for(Direction direction : directionList)
+        {
+            userLoad.loadBudget(direction.getUrlToListOfClaims(),direction);
+        }
     }
 }

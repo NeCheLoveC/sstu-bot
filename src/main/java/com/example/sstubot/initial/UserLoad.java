@@ -1,8 +1,7 @@
 package com.example.sstubot.initial;
 
 import com.example.sstubot.database.model.*;
-import com.example.sstubot.database.model.urils.DirectionType;
-import com.example.sstubot.database.repositories.ExamRepository;
+import com.example.sstubot.database.model.urils.ClaimType;
 import com.example.sstubot.database.service.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,6 +24,9 @@ public class UserLoad
     protected ClaimService claimService;
     protected ScoreService scoreService;
     protected UserService userService;
+    final int USER_CODE_ID = 1;
+    final int AMOUNT_SCORE_ID = 2;
+    final String URL_ADDRESS_TO_LIST = "https://abitur.sstu.ru/";
 
     @Autowired
     public UserLoad(ExamService examService, DirectionService directionService, ClaimService claimService, ScoreService scoreService, UserService userService) {
@@ -33,6 +35,114 @@ public class UserLoad
         this.claimService = claimService;
         this.scoreService = scoreService;
         this.userService = userService;
+    }
+
+    public List<Claim> getAllClaimsByDirection(List<Direction> directions)
+    {
+        try{
+            for(Direction dir : directions)
+            {
+
+                Document document = Jsoup.connect(dir.getUrlToListOfClaims()).get();
+                //Получить экзамены по направлению
+                Element tableHead = document.selectFirst("thead.text-center");
+                List<Exam> exams = getExamsInDirection(tableHead);
+
+
+                final int AMOUNT_SCORE_FOR_INDIVIDUAL_ACHIEVEMENTS = AMOUNT_SCORE_ID + exams.size() + 1;
+                final int DOCUMENT_TYPE_ID = AMOUNT_SCORE_FOR_INDIVIDUAL_ACHIEVEMENTS + 1;
+                final int AGREEMENT_ID = DOCUMENT_TYPE_ID + 1;
+                final int CONDITION_ID = AGREEMENT_ID + 2;//Состояние - подано/отозвано/зачислен
+                final int CHAMPION_ID = CONDITION_ID + 2;
+                        //Заявки на направление
+                Element usersIntoTBody = document.getElementsByTag("tbody").first();
+                Elements usersAsTr = usersIntoTBody.children();
+                for(Element userRaw : usersAsTr)
+                {
+                    Elements usersData = userRaw.children();
+
+                    if(!usersData.get(CONDITION_ID).text().matches("((Подано)|(Зачислен))"))
+                    {
+                        continue;
+                    }
+
+                    String userId = usersData.get(USER_CODE_ID).text().trim();
+                    User user = userService.getUserByUniqueCode(userId);
+                    Element priority = usersData.get(USER_CODE_ID).selectFirst("div.small");
+                    if(priority == null)
+                    {
+                        System.out.println("Приоритетность не обнаружена");
+                        continue;
+                    }
+                    Elements pr = priority.select("a");
+                    List<Claim> claimList = new LinkedList<>();
+                    //p - ссылка (<a>) на приоритетность направления у АБИТУРИЕНТА (User)
+                    for(Element p : pr)
+                    {
+                        String url = p.attr("href");
+                        Claim c = new Claim();
+                        Direction direction = directionService.getDirectionByBudgetUrl(url);
+                        if(direction == null)
+                            throw new RuntimeException("Direction не найден");
+                        c.setDirection(direction);
+                        c.setUser();
+                    }
+                    User user = new User();
+                    user.setUniqueCode(userId);
+                    Claim claim = new Claim();
+
+                }
+            }
+        }
+        catch (Exception err)
+        {
+            System.out.println(err.getMessage());
+            System.out.println(err.getStackTrace());
+        }
+    }
+
+    public List<Exam> getExamsInDirection(Element element)
+    {
+        List<Exam> exams = new LinkedList<>();
+        Elements elements = element.children();
+        for (int i = AMOUNT_SCORE_ID + 1;true; i++)
+        {
+            Element part = elements.get(i);
+            String textInsideElement = part.text();
+            if(textInsideElement.matches(".*за инд. дост.*"))
+            {
+                break;
+            }
+            Exam exam = new Exam(textInsideElement);
+            exams.add(exam);
+        }
+        if(exams.isEmpty())
+            throw new RuntimeException("Дисциплина не содержит вступительных экзаменов");
+        return exams;
+    }
+
+
+    public User getUserFromElement(Element element)
+    {
+        final int ID = 1;
+
+        LinkedList<Exam> score = new LinkedList<>();
+        Elements partOfUser = element.children();
+        //Получаем баллы по экзаменам
+        for(int i = AMOUNT_SCORE + 1;true;i++)
+        {
+            Element exam = partOfUser.get(i);
+        }
+    }
+
+    public List<User> getAllUser(List<Direction> directions)
+    {
+
+    }
+
+    private List<Claim> getClaimsIntoElementBlock(Element element, ClaimType claimType)
+    {
+
     }
 
     @Transactional
@@ -80,7 +190,7 @@ public class UserLoad
                 {
                     //В целевое
                     Element tBodyTable = elementOfGroup.selectFirst("tbody");
-                    getAllUsersByUrlFromTable(tBodyTable, direction, direction.getUrlToListOfClaims(),exams, DirectionType.BUDGET);
+                    getAllUsersByUrlFromTable(tBodyTable, direction, direction.getUrlToListOfClaims(),exams, ClaimType.BUDGET);
 
 
                     //if(direction.getUrlToListOfClaimsCommerce() != null && !direction.getUrlToListOfClaimsCommerce().isEmpty() && !direction.getUrlToListOfClaimsCommerce().isBlank())
@@ -90,19 +200,19 @@ public class UserLoad
                 {
                     //Спец квота
                     Element tBodyTable = elementOfGroup.selectFirst("tbody");
-                    getAllUsersByUrlFromTable(tBodyTable, direction, direction.getUrlToListOfClaims(),exams, DirectionType.BUDGET);
+                    getAllUsersByUrlFromTable(tBodyTable, direction, direction.getUrlToListOfClaims(),exams, ClaimType.BUDGET);
                 }
                 else if(textInfo.matches(".*особ.*"))
                 {
                     //Особые права
                     Element tBodyTable = elementOfGroup.selectFirst("tbody");
-                    getAllUsersByUrlFromTable(tBodyTable, direction, direction.getUrlToListOfClaims(),exams, DirectionType.BUDGET);
+                    getAllUsersByUrlFromTable(tBodyTable, direction, direction.getUrlToListOfClaims(),exams, ClaimType.BUDGET);
                 }
                 else if(textInfo.matches(".*общ.*"))
                 {
                     //Общий конкурс
                     Element tBodyTable = elementOfGroup.selectFirst("tbody");
-                    getAllUsersByUrlFromTable(tBodyTable, direction, direction.getUrlToListOfClaims(),exams, DirectionType.BUDGET);
+                    getAllUsersByUrlFromTable(tBodyTable, direction, direction.getUrlToListOfClaims(),exams, ClaimType.BUDGET);
                 }
 
 
@@ -115,7 +225,7 @@ public class UserLoad
     }
 
     //Element - tbody
-    private List<User> getAllUsersByUrlFromTable(Element tBodytable, Direction direction, String url,List<Exam> exams, DirectionType directionType)
+    private List<User> getAllUsersByUrlFromTable(Element tBodytable, Direction direction, String url,List<Exam> exams, ClaimType directionType)
     {
         List<User> userList = new LinkedList<>();
         try

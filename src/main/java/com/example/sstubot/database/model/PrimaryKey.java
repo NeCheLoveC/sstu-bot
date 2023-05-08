@@ -1,43 +1,56 @@
 package com.example.sstubot.database.model;
 
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
+import com.example.sstubot.database.model.urils.ClaimType;
+import jakarta.persistence.*;
+import org.hibernate.Hibernate;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Embeddable
 public class PrimaryKey implements Serializable
 {
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    protected User user;
-
-    @ManyToOne
-    @JoinColumn(name = "direction_id")
-    protected Direction direction;
-
-    public User getUser() {
-        return user;
+    @Column(name = "user_id")
+    protected Long userId;
+    @Column(name = "direction_id")
+    protected Long directionId;
+    @Enumerated(value = EnumType.STRING)
+    public ClaimType claimType;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
-    public Direction getDirection() {
-        return direction;
+    public Long getDirectionId() {
+        return directionId;
     }
 
-    public void setDirection(Direction direction) {
-        this.direction = direction;
+    public void setDirection(Long directionId) {
+        this.directionId = directionId;
     }
-
     protected PrimaryKey(){}
 
-    public PrimaryKey(User user, Direction direction) {
-        this.user = user;
-        this.direction = direction;
+    public PrimaryKey(Long userId, Long directionId, ClaimType claimType) {
+        this.userId = userId;
+        this.directionId = directionId;
+        this.claimType = claimType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        PrimaryKey that = (PrimaryKey) o;
+        return getUserId() != null && Objects.equals(getUserId(), that.getUserId())
+                && getDirectionId() != null && Objects.equals(getDirectionId(), that.getDirectionId())
+                && claimType != null && Objects.equals(claimType, that.claimType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userId, directionId, claimType);
     }
 }

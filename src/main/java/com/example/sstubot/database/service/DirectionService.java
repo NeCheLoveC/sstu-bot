@@ -22,4 +22,9 @@ public class DirectionService
     {
         return directionRepository.save(direction);
     }
+
+    public Direction getDirectionByBudgetUrl(String urlBudget)
+    {
+        return directionRepository.getDirectionByUrlToListOfClaims(urlBudget);
+    }
 }

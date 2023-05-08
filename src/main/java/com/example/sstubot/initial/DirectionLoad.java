@@ -32,23 +32,22 @@ public class DirectionLoad
     }
 
     @Transactional
-    public List<Direction> load(HashMap<String, Institute> instituteHashMap)
+    public List<Direction> load(HashMap<String,Institute> institutes)
     {
         List<Direction> listOfDirections = new LinkedList<>();
         try
         {
             Document document = Jsoup.connect(InstitutesLoad.urlListOfDirections).get();
             Element table = document.getElementsByTag("tbody").first();
-
             Elements elements = table.getElementsByTag("tr");
             Institute institute = null;
-            Element el;
+            Element el = null;
             for(int i = 0; i < elements.size();i++)
             {
                 el = elements.get(i);
                 if(isInstitute(el))
                 {
-                    institute = instituteHashMap.get(el.select("th.table-structure-subtitle").first().text());
+                    institute = institutes.get(el.select("th.table-structure-subtitle").first().text());
                     if(institute != null)
                     {
                         instituteService.save(institute);

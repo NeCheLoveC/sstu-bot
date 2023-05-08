@@ -1,22 +1,34 @@
 package com.example.sstubot.database.model;
 
-import com.example.sstubot.database.model.urils.DirectionType;
+import com.example.sstubot.database.model.urils.EducationType;
+import com.example.sstubot.initial.MetaInfoAboutUserIntoDirection;
 import jakarta.persistence.*;
 
+import java.util.LinkedList;
+import java.util.List;
+
 @Entity
-@Table
-public class Direction
-{
+@Table(name = "Direction", indexes = {
+        @Index(name = "INDEX_URL_TO_BUDGET", columnList = "url_to_list_of_claims_budget", unique = true),
+        @Index(name = "INDEX_URL_TO_COMMERCE", columnList = "url_to_list_of_claims_commerce", unique = true)
+})
+public class Direction {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     protected Long id;
 
     @Column(name = "name")
     protected String name;
+    @Column(name = "edu_type")
+    @Enumerated(EnumType.STRING)
+    protected EducationType educationType;//очка, заочка, очно-заочное
 
     @ManyToOne
     @JoinColumn(name = "institute_id")
     protected Institute institute;
+
+    @Embedded
+    private MetaInfoAboutUserIntoDirection metaInfo;
 
     //Особая квота
     @Column(name = "unusual_quota")
@@ -40,28 +52,36 @@ public class Direction
     @Column(name = "abbreviation")
     protected String abbreviation;
 
-    @Column(name = "url_to_list_of_claims_budget")
+    @Column(name = "url_to_list_of_claims_budget", unique = true)
     protected String urlToListOfClaims;
 
-    @Column(name = "url_to_list_of_claims_commerce")
+    @Column(name = "url_to_list_of_claims_commerce",unique = true)
     protected String urlToListOfClaimsCommerce;
-
+    // TODO: 05.05.2023 Вот тут не уверен насчет hibernate
+    @OneToMany
+    @JoinColumn(name = "direction_id")
+    List<Exam> exams = new LinkedList<>();
     /*
     @Enumerated(EnumType.STRING)
     @Column(name = "direction_type_payment")
     protected DirectionType directionTypePayment;
-
      */
-
+    @Transient
+    private List<Claim> budgetGeneralListClaims = new LinkedList<Claim>();
+    @Transient
+    private List<Claim> budgetSpecialQuotaClaims = new LinkedList<Claim>();
+    @Transient
+    private List<Claim> budgetTargetQuotaClaims = new LinkedList<Claim>();
+    @Transient
+    private List<Claim> budgetUnusualQuotaClaims = new LinkedList<Claim>();
+    @Transient
+    private List<Claim> commerceGeneralListClaims = new LinkedList<>();
     @Transient
     protected int reservedUnusualQuota = 0;
-
     @Transient
     protected int reservedSpecialQuota = 0;
-
     @Transient
     protected int reservedTargetQuota = 0;
-
     @Transient
     protected int amountBudgetFinal = 0;
 
@@ -188,6 +208,22 @@ public class Direction
 
     public void setUrlToListOfClaimsCommerce(String urlToListOfClaimsCommerce) {
         this.urlToListOfClaimsCommerce = urlToListOfClaimsCommerce;
+    }
+
+    public MetaInfoAboutUserIntoDirection getMetaInfo() {
+        return metaInfo;
+    }
+
+    public void setMetaInfo(MetaInfoAboutUserIntoDirection metaInfo) {
+        this.metaInfo = metaInfo;
+    }
+
+    public List<Exam> getExams() {
+        return exams;
+    }
+
+    public void setExams(List<Exam> exams) {
+        this.exams = exams;
     }
 
     /*
