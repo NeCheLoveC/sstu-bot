@@ -20,6 +20,8 @@ public class Score
     @ManyToOne
     @JoinColumn(name = "exam_id")
     protected Exam exam;
+    @Column(name = "absence")
+    protected boolean absence = false;//Неявка
 
     public Score() {}
 
@@ -49,5 +51,13 @@ public class Score
 
     public void setExam(Exam exam) {
         this.exam = exam;
+    }
+
+    public boolean isAbsence() {
+        return absence;
+    }
+
+    public void setAbsence(boolean absence) {
+        this.absence = absence;
     }
 }

@@ -17,9 +17,16 @@ public class InstituteService
     public InstituteService(InstituteRepository instituteRepository) {
         this.instituteRepository = instituteRepository;
     }
-
     public Institute save(Institute institute)
     {
         return instituteRepository.save(institute);
+    }
+    public Institute getInstituteByName(String name)
+    {
+        return instituteRepository.getInstituteByName(name);
+    }
+    public Long countInstance()
+    {
+        return this.countInstance();
     }
 }

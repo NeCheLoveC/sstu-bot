@@ -1,11 +1,14 @@
 package com.example.sstubot.database.model;
 
+import com.example.sstubot.database.model.urils.ClaimType;
 import com.example.sstubot.database.model.urils.EducationType;
 import com.example.sstubot.initial.MetaInfoAboutUserIntoDirection;
 import jakarta.persistence.*;
+import org.hibernate.Hibernate;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "Direction", indexes = {
@@ -26,9 +29,8 @@ public class Direction {
     @ManyToOne
     @JoinColumn(name = "institute_id")
     protected Institute institute;
-
-    @Embedded
-    private MetaInfoAboutUserIntoDirection metaInfo;
+    @OneToOne(mappedBy = "direction", optional = true, cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+    MetaInfoAboutUserIntoDirection metaInfo;
 
     //Особая квота
     @Column(name = "unusual_quota")
@@ -54,7 +56,8 @@ public class Direction {
 
     @Column(name = "url_to_list_of_claims_budget", unique = true)
     protected String urlToListOfClaims;
-
+    @Column(name = "ignore_direction")
+    protected boolean ignoreDirection = false;
     @Column(name = "url_to_list_of_claims_commerce",unique = true)
     protected String urlToListOfClaimsCommerce;
     // TODO: 05.05.2023 Вот тут не уверен насчет hibernate
@@ -66,6 +69,8 @@ public class Direction {
     @Column(name = "direction_type_payment")
     protected DirectionType directionTypePayment;
      */
+    @OneToMany(mappedBy = "direction")
+    private List<Claim> allClaims = new LinkedList<>();
     @Transient
     private List<Claim> budgetGeneralListClaims = new LinkedList<Claim>();
     @Transient
@@ -87,10 +92,12 @@ public class Direction {
 
     public Direction(){}
 
-    public Direction(String name, Institute institute)
+    public Direction(String name, Institute institute, EducationType educationType,MetaInfoAboutUserIntoDirection metaInfo)
     {
         this.name = name;
         this.institute = institute;
+        this.educationType = educationType;
+        this.metaInfo = metaInfo;
     }
 
     public String getName() {
@@ -225,6 +232,28 @@ public class Direction {
     public void setExams(List<Exam> exams) {
         this.exams = exams;
     }
+    public void addClaim(Claim claim)
+    {
+        this.allClaims.add(claim);
+    }
+
+    public EducationType getEducationType() {
+        return educationType;
+    }
+
+    public void setEducationType(EducationType educationType) {
+        this.educationType = educationType;
+    }
+
+    public boolean isIgnoreDirection() {
+        return ignoreDirection;
+    }
+
+    public void setIgnoreDirection(boolean ignoreDirection) {
+        this.ignoreDirection = ignoreDirection;
+    }
+
+
 
     /*
     public DirectionType getDirectionTypePayment() {
@@ -236,4 +265,17 @@ public class Direction {
     }
 
      */
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        Direction direction = (Direction) o;
+        return getId() != null && Objects.equals(getId(), direction.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return this.name.hashCode();
+    }
 }

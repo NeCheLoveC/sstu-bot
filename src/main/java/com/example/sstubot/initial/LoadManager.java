@@ -2,11 +2,16 @@ package com.example.sstubot.initial;
 
 import com.example.sstubot.database.model.*;
 import com.example.sstubot.database.model.urils.ClaimType;
+import com.example.sstubot.database.model.urils.EducationType;
 import com.example.sstubot.database.service.DirectionService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
@@ -14,43 +19,60 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Component
+@Scope(value = "prototype")
 public class LoadManager
 {
     private DirectionService directionService;
-    private Map<String, User> userMap = new HashMap<>();
+    private Map<String, User> userMap;
     final int USER_CODE_ID = 1;
     final int AMOUNT_SCORE_ID = 2;
-    final String URL_ADDRESS_TO_LIST = "https://abitur.sstu.ru";
-    public void loadWrapper(List<Direction> directionList)
+    //final String URL_ADDRESS_TO_LIST = "https://abitur.sstu.ru";
+    @Autowired
+    public LoadManager(DirectionService directionService)
+    {
+        this.directionService = directionService;
+    }
+    @Transactional
+    public Map<String, User> loadClaims()
     {
         try
         {
-
+            List<Direction> directionList = directionService.getAllDirection();
+            this.userMap = new HashMap<>();
+            loadWrapper(directionList);
         }
         catch (Exception err)
         {
-
+            System.out.println(err.getStackTrace());
         }
+        return this.userMap;
     }
 
-    private void load(List<Direction> directionList) throws IOException {
+    private void loadWrapper(List<Direction> directionList) throws IOException {
+        int a = 0;
         for(Direction direction : directionList)
         {
             if(direction.getMetaInfo() != null)
-                loadUsersIntoDirection(direction);
+            {
+                fillClaimsIntoDirection(direction);
+                a++;
+            }
         }
     }
 
     //Загрузка уникальных юзеров со страницы списков (как бюджет, так и коммерция)
-    private void loadUsersIntoDirection(Direction direction) throws IOException {
+    private void fillClaimsIntoDirection(Direction direction) throws IOException {
         String urlToBudgetClaims = direction.getUrlToListOfClaims();
         MetaInfoAboutUserIntoDirection metaInfo = direction.getMetaInfo();
         String urlToBudgetClaim;
+        //Заполнение Claim бюджет
         if(validateURLtoClaims(direction.getUrlToListOfClaims()))
         {
-            urlToBudgetClaim = URL_ADDRESS_TO_LIST + direction.getUrlToListOfClaims();
+            //urlToBudgetClaim = URL_ADDRESS_TO_LIST + direction.getUrlToListOfClaims();
+            urlToBudgetClaim = direction.getUrlToListOfClaims();
             Document document = Jsoup.connect(urlToBudgetClaim).get();
-            Elements divTables = document.select("div.ras-block"); //Каждый блок содержит название таблицы и саму таблицу
+            Elements divTables = document.select("div.rasp-block"); //Каждый блок содержит название таблицы и саму таблицу
             //Elements tbodyOfUsers = document.select("tbody.text-center");
             //Для бюджета
             for(Element divTable : divTables)
@@ -60,22 +82,29 @@ public class LoadManager
                 Element divTableName = divTable.select("div.block-title div").get(1);
                 String tableName = divTableName != null ? divTableName.text().trim() : null ;
                 ClaimType claimType = defineClaimType(tableName);
-                Element tableTBody = divTable.getElementsByAttribute("tbody").first();
+                Element tableTBody = divTable.selectFirst("tbody");
                 if(tableTBody == null)
                     continue;
-                searchUsersIntoTable(direction, tableTBody,claimType);
+                fillClaimIntoDirectionFromTbody(direction, tableTBody,claimType);
             }
         }
+        //Заполение Claim на коммерцию
         if(validateURLtoClaims(direction.getUrlToListOfClaimsCommerce()))
         {
-            Document documentForCommerce = Jsoup.connect(URL_ADDRESS_TO_LIST + direction.getUrlToListOfClaimsCommerce()).get();
+            //Document documentForCommerce = Jsoup.connect(URL_ADDRESS_TO_LIST + direction.getUrlToListOfClaimsCommerce()).get();
+            Document documentForCommerce = Jsoup.connect(direction.getUrlToListOfClaimsCommerce()).get();
             Element divRaspBlock = documentForCommerce.selectFirst("div.rasp-block");
             if(divRaspBlock != null)
             {
                 Element divTableName = divRaspBlock.select("div.block-title div").get(1);
-                String tableName = divTableName != null ? divTableName.text().trim() : null;
+                String tableName = divTableName != null ? divTableName.ownText().trim() : null;
                 if(!tableName.matches(".*платной.*"))
                     throw new RemoteException("Не распознано название таблицы : " + tableName);
+                Element tbody = divRaspBlock.selectFirst("tbody");
+                if(tbody != null)
+                {
+                    fillClaimIntoDirectionFromTbody(direction, tbody,ClaimType.COMMERCE_GENERAL_LIST);
+                }
             }
         }
         //По договорам
@@ -117,60 +146,88 @@ public class LoadManager
         return url != null && !url.isEmpty() && !url.isBlank() ? true : false;
     }
 
-    private void searchUsersIntoTable(Direction direction, Element tbody, ClaimType claimType)
+    private void fillClaimIntoDirectionFromTbody(Direction direction, Element tbody, ClaimType claimType)
     {
-        Elements rawUsersData = tbody.children();
-        for(Element userRaw : rawUsersData)
+        Elements rawClaimList = tbody.children();
+        for(Element rawClaimData : rawClaimList)
         {
-            loadRawUserFromTableString(direction, userRaw.children(),claimType);
+            loadRawClaim(direction, rawClaimData.children(),claimType);
         }
     }
 
     /**
-     * @param rawUserData Группа элементов-столбцов, олицетворяющих User's в таблице (дочерние элементы tr  таблице)
+     * @param rawDataClaim Группа элементов-столбцов, олицетворяющих User's в таблице (дочерние элементы tr  таблице)
      * @return User
      */
-    private void loadRawUserFromTableString(Direction currentDirection, Elements rawUserData, ClaimType claimType)
+    private void loadRawClaim(Direction currentDirection, Elements rawDataClaim, ClaimType claimType)
     {
-        String userCode = rawUserData.get(MetaInfoAboutUserIntoDirection.USER_CODE_ID).text().trim();
+        String userCode = rawDataClaim.get(MetaInfoAboutUserIntoDirection.USER_CODE_ID).ownText().trim();
         //User-id найден впервые -> создаем юзера, заявку и список приоретета
         if(!this.userMap.containsKey(userCode))
         {
-            Pattern pattern = Pattern.compile("\\s*((подано)|(зачислен))\\s*",Pattern.CASE_INSENSITIVE);
-            Matcher matcher = pattern.matcher(rawUserData.get(currentDirection.getMetaInfo().CONDITION_ID).text());
+            String statusOfClaim = rawDataClaim.get(currentDirection.getMetaInfo().CONDITION_ID).text();
+            //String typeOfDocument = rawDataClaim.get(currentDirection.getMetaInfo().CONDITION_ID).text();
+            Pattern pattern = Pattern.compile("(Подано)|(Зачислен)",Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(statusOfClaim);
             boolean isActualClaim = matcher.matches();
             if(!isActualClaim)
                 return;
-
+            String typeDocument = rawDataClaim.get(currentDirection.getMetaInfo().DOCUMENT_TYPE_ID).ownText().trim();
+            boolean originalDoc = typeDocument.matches(".*Оригинал.*");
             User user = user = new User();
             user.setUniqueCode(userCode);
-
-            Elements rawPriorities = rawUserData.get(MetaInfoAboutUserIntoDirection.USER_CODE_ID).getElementsByAttribute("a");
+            user.setOriginalDocuments(originalDoc);
+            Elements rawPriorities = rawDataClaim.get(MetaInfoAboutUserIntoDirection.USER_CODE_ID).getElementsByTag("a");
             for(int i = 0;i < rawPriorities.size();i++)
             {
                 Element p = rawPriorities.get(i);
-                Direction direction = directionService.getDirectionByBudgetUrl(p.attr("href"));
-                boolean isBudget = p.attr("title").matches(".*бюджет.*");
+                String infoAboutAnotherClaimIntoTitle = p.attr("title");
+                boolean isBudget = infoAboutAnotherClaimIntoTitle.matches(".*бюджет.*");
+                EducationType edyType = defineEduTypeByString(infoAboutAnotherClaimIntoTitle);
+                Direction direction;
+                String url = p.attr("href");
+                if(isBudget)
+                {
+                    direction = directionService.getDirectionByBudgetUrl(url);
+                }
+                else
+                {
+                    direction = directionService.getDirectionByCommerceUrl(url);
+                }
                 ClaimPriorities priority = new ClaimPriorities(direction, isBudget);
                 user.addPriorities(priority);
             }
-            formedClaimAndAdd(currentDirection, rawUserData, claimType, user);
+            formedClaimAndAdd(currentDirection, rawDataClaim, claimType, user);
             this.userMap.put(userCode,user);
         }
         else
         {
             User user = userMap.get(userCode);
-            Pattern pattern = Pattern.compile("\\s*((подано)|(зачислен))\\s*",Pattern.CASE_INSENSITIVE);
-            Matcher matcher = pattern.matcher(rawUserData.get(currentDirection.getMetaInfo().CONDITION_ID).text());
+            Pattern pattern = Pattern.compile("(Подано)|(Зачислен)",Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(rawDataClaim.get(currentDirection.getMetaInfo().CONDITION_ID).text());
             boolean isActualClaim = matcher.matches();
             if(!isActualClaim)
                 return;
-            formedClaimAndAdd(currentDirection, rawUserData, claimType, user);
+            formedClaimAndAdd(currentDirection, rawDataClaim, claimType, user);
         }
     }
-
+    private EducationType defineEduTypeByString(String str)
+    {
+        EducationType eduType;
+        if(str.matches("Очная\\s+форма.*"))
+            eduType = EducationType.OChNAYa;
+        else if(str.matches("Заочная\\s+форма.*"))
+            eduType = EducationType.ZAOChNAYa;
+        else if(str.matches("Очно-заочная.*"))
+            eduType = EducationType.OChNO_ZAOChNAYa;
+        else
+            throw new RuntimeException("Не удалось распознать форму обучения (очная | заочная | очно-зачоная форма)");
+        return eduType;
+    }
+    @Transactional
     private void formedClaimAndAdd(Direction currentDirection, Elements rawUserData, ClaimType claimType, User user) {
         List<Exam> exams = currentDirection.getExams();
+
         Claim claim = new Claim(user,currentDirection,claimType);
         List<Score> scores = new LinkedList<>();
         MetaInfoAboutUserIntoDirection metaInf = currentDirection.getMetaInfo();
@@ -178,22 +235,41 @@ public class LoadManager
         for(int i = MetaInfoAboutUserIntoDirection.AMOUNT_SCORE_ID + 1;i < metaInf.AMOUNT_SCORE_FOR_INDIVIDUAL_ACHIEVEMENTS;i++)
         {
             int points = 0;
+            Score score = new Score();
             try
             {
                 points = Integer.valueOf(rawUserData.get(i).text().trim());
             }
             catch (NumberFormatException err)
             {
-                System.out.println("Ошибка преобразования кол-во баллов: " + currentDirection.getUrlToListOfClaims());
+                System.out.println("Ошибка преобразования кол-во баллов: " + currentDirection.getUrlToListOfClaims() + "\nСписок :"
+                + currentDirection.getName() + "\nПользователь: " + user.getUniqueCode()
+                );
+                score.setAbsence(true);
+                claim.setAbsence(true);
             }
-            Score score = new Score();
+
             score.setExam(exams.get(id));
             score.setScore(points);
             score.setClaim(claim);
             scores.add(score);
             id++;
         }
-        user.addClaim(claim);
+        claim.setScoreList(scores);
+        String individualAchievements = rawUserData.get(metaInf.AMOUNT_SCORE_FOR_INDIVIDUAL_ACHIEVEMENTS).text();
+        int individualScore = 0;
+        try
+        {
+            individualScore = Integer.valueOf(individualAchievements);
+        }
+        catch (NumberFormatException err)
+        {
+            System.out.println("Ошибка приведения к чсловому виду (индивидуальные достижения)");
+        }
+        if(!rawUserData.get(metaInf.CHAMPION_ID).ownText().matches("\\s*"))
+            claim.setChampion(true);
+        claim.setCountScoreForIndividualAchievements(individualScore);
+        //user.addClaim(claim);
     }
 
 }

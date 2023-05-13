@@ -19,7 +19,9 @@ import java.util.Set;
 @Component
 public class InstitutesLoad
 {
-    public static String urlListOfDirections = "https://abitur.sstu.ru/vpo/level/2022/b/o";
+    public static String urlListOfDirections = "https://abitur.sstu.ru/vpo/level/2022/b/o"; //ОЧКА
+    public static String urlListOfDirectionsZAOCHNAY = "https://abitur.sstu.ru/vpo/level/2022/b/z";
+    public static String getUrlListOfDirectionsOCHNO_ZAOCHNAY = "https://abitur.sstu.ru/vpo/level/2022/b/oz";
 
     protected InstituteService instituteService;
 
@@ -29,14 +31,14 @@ public class InstitutesLoad
         //this.instituteHashMap = new HashMap<>();
     }
 
-    @Transactional
+
     public HashMap<String, Institute> load()
     {
         HashMap<String, Institute> result = new HashMap<>();
         try {
             Document document = Jsoup.connect(urlListOfDirections).get();
             Elements elements = document.getElementsByClass("table-structure-subtitle");
-            elements.remove(elements.size() - 1);
+            //elements.remove(elements.size() - 1);
             for(Element element : elements)
             {
                 Institute institute = new Institute();

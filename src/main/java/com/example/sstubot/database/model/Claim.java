@@ -9,7 +9,6 @@ import java.util.*;
 @Entity
 @Table(name = "Claim")
 public class Claim {
-    @Id
     @EmbeddedId
     protected PrimaryKey id = new PrimaryKey();
     @ManyToOne
@@ -26,12 +25,11 @@ public class Claim {
     // TODO: 25.12.2022 ПЕРЕИМЕНОВАТЬ 
     @Column(name = "champion")
     protected boolean champion = false;
-
+    @Column(name = "absence")
+    protected boolean absence = false;
     @OneToMany(mappedBy = "claim")
     protected List<Score> scoreList = new LinkedList<>();
-
     protected Claim(){}
-
     public Claim(User user, Direction direction, ClaimType claimType) {
         this.id.userId = user.getId();
         this.id.directionId = direction.getId();
@@ -40,6 +38,9 @@ public class Claim {
         this.user = user;;
         this.direction = direction;
         this.claimType = claimType;
+
+        user.addClaim(this);
+        direction.addClaim(this);
     }
 
     public User getUser() {
@@ -104,6 +105,7 @@ public class Claim {
         this.claimType = claimType;
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -121,5 +123,13 @@ public class Claim {
     public boolean isBudget()
     {
         return claimType == ClaimType.COMMERCE_GENERAL_LIST ? false : true;
+    }
+
+    public boolean isAbsence() {
+        return absence;
+    }
+
+    public void setAbsence(boolean absence) {
+        this.absence = absence;
     }
 }

@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
 public interface DirectionRepository extends JpaRepository<Direction, Long> {
     @Query("select d from Direction d where d.urlToListOfClaims ILIKE :urlBudget")
     public Direction getDirectionByUrlToListOfClaims(String urlBudget);
+    @Query("select d from Direction d where d.urlToListOfClaimsCommerce ILIKE :urlCommerce")
+    public Direction getDirectionByUrlToListOfClaimsCommerce(String urlCommerce);
 }

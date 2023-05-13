@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional
 public class DirectionService
@@ -26,5 +28,13 @@ public class DirectionService
     public Direction getDirectionByBudgetUrl(String urlBudget)
     {
         return directionRepository.getDirectionByUrlToListOfClaims(urlBudget);
+    }
+    public Direction getDirectionByCommerceUrl(String url)
+    {
+        return directionRepository.getDirectionByUrlToListOfClaimsCommerce(url);
+    }
+    public List<Direction> getAllDirection()
+    {
+        return this.directionRepository.findAll();
     }
 }

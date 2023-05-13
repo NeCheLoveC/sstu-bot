@@ -20,6 +20,10 @@ public class Institute
 
     public Institute(){}
 
+    public Institute(String name) {
+        this.name = name;
+    }
+
     public Long getId() {
         return id;
     }

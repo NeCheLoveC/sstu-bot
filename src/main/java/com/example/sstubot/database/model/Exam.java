@@ -12,8 +12,8 @@ public class Exam
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     protected Long id;
-
-    @Column(name = "name", unique = true)
+    // TODO: 13.05.2023 , unique = true 
+    @Column(name = "name")
     protected String name;
 
     public Exam(){}
