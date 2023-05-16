@@ -37,4 +37,10 @@ public class DirectionService
     {
         return this.directionRepository.findAll();
     }
+    /*
+    public List<Direction> getAllDirectionWithClaims()
+    {
+        return this.directionRepository.getDirWithClaims();
+    }
+     */
 }

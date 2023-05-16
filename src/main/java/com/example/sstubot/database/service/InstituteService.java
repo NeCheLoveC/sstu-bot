@@ -27,6 +27,6 @@ public class InstituteService
     }
     public Long countInstance()
     {
-        return this.countInstance();
+        return this.instituteRepository.countAllInstitute();
     }
 }

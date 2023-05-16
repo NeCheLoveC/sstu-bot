@@ -1,7 +1,11 @@
 package com.example.sstubot.initial;
 
 import com.example.sstubot.database.model.Direction;
+import com.example.sstubot.database.model.Exam;
 import jakarta.persistence.*;
+
+import java.util.LinkedList;
+import java.util.List;
 
 @Entity
 @Table
@@ -22,6 +26,10 @@ public class MetaInfoAboutUserIntoDirection
     )
     @JoinColumn(name = "direction_id", unique = true)
     protected Direction direction;
+    @OneToMany()
+    @JoinColumn(name = "meta_id")
+    @OrderColumn
+    List<Exam> examList = new LinkedList<>();
     protected MetaInfoAboutUserIntoDirection(){};
     public MetaInfoAboutUserIntoDirection(Direction direction,int countExams)
     {

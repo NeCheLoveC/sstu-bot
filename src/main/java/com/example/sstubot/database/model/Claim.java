@@ -31,6 +31,10 @@ public class Claim {
     protected List<Score> scoreList = new LinkedList<>();
     protected Claim(){}
     public Claim(User user, Direction direction, ClaimType claimType) {
+        //if(user == null || direction == null )
+            //throw new RuntimeException("При создании Claim были переданы user = null или department = null");
+        //if(user.getId() == null || direction.getId() == null)
+            //throw new RuntimeException("Для создания заявки user и department уже должны быть ХРАНИМЫМИ");
         this.id.userId = user.getId();
         this.id.directionId = direction.getId();
         this.id.claimType = claimType;
@@ -42,6 +46,17 @@ public class Claim {
         user.addClaim(this);
         direction.addClaim(this);
     }
+    public static Claim createNewClaim(User user, Direction direction, ClaimType claimType)
+    {
+        Claim claim = new Claim();
+        claim.direction = direction;
+        claim.user = user;
+        claim.claimType = claimType;
+        direction.addClaimIntoNewClaims(claim);
+        user.addClaim(claim);
+        return claim;
+    }
+
 
     public User getUser() {
         return user;

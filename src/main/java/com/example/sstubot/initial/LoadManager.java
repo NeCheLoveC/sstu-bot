@@ -27,7 +27,7 @@ public class LoadManager
     private Map<String, User> userMap;
     final int USER_CODE_ID = 1;
     final int AMOUNT_SCORE_ID = 2;
-    //final String URL_ADDRESS_TO_LIST = "https://abitur.sstu.ru";
+    final String URL_DOMAIN_PDAGE = "https://abitur.sstu.ru";
     @Autowired
     public LoadManager(DirectionService directionService)
     {
@@ -36,16 +36,19 @@ public class LoadManager
     @Transactional
     public Map<String, User> loadClaims()
     {
+        List<Direction> directionList = new LinkedList<>();
         try
         {
-            List<Direction> directionList = directionService.getAllDirection();
+            directionList = directionService.getAllDirection();
             this.userMap = new HashMap<>();
             loadWrapper(directionList);
         }
         catch (Exception err)
         {
-            System.out.println(err.getStackTrace());
+            throw new RuntimeException(err);
+            //System.out.println(err.getStackTrace());
         }
+        List<Direction> d = directionList;
         return this.userMap;
     }
 
@@ -53,7 +56,7 @@ public class LoadManager
         int a = 0;
         for(Direction direction : directionList)
         {
-            if(direction.getMetaInfo() != null)
+            if(direction.getMetaInfo() != null && !direction.isIgnoreDirection())
             {
                 fillClaimsIntoDirection(direction);
                 a++;
@@ -63,8 +66,7 @@ public class LoadManager
 
     //Загрузка уникальных юзеров со страницы списков (как бюджет, так и коммерция)
     private void fillClaimsIntoDirection(Direction direction) throws IOException {
-        String urlToBudgetClaims = direction.getUrlToListOfClaims();
-        MetaInfoAboutUserIntoDirection metaInfo = direction.getMetaInfo();
+        //MetaInfoAboutUserIntoDirection metaInfo = direction.getMetaInfo();
         String urlToBudgetClaim;
         //Заполнение Claim бюджет
         if(validateURLtoClaims(direction.getUrlToListOfClaims()))
@@ -174,7 +176,7 @@ public class LoadManager
                 return;
             String typeDocument = rawDataClaim.get(currentDirection.getMetaInfo().DOCUMENT_TYPE_ID).ownText().trim();
             boolean originalDoc = typeDocument.matches(".*Оригинал.*");
-            User user = user = new User();
+            User user = new User();
             user.setUniqueCode(userCode);
             user.setOriginalDocuments(originalDoc);
             Elements rawPriorities = rawDataClaim.get(MetaInfoAboutUserIntoDirection.USER_CODE_ID).getElementsByTag("a");
@@ -185,7 +187,7 @@ public class LoadManager
                 boolean isBudget = infoAboutAnotherClaimIntoTitle.matches(".*бюджет.*");
                 EducationType edyType = defineEduTypeByString(infoAboutAnotherClaimIntoTitle);
                 Direction direction;
-                String url = p.attr("href");
+                String url = URL_DOMAIN_PDAGE + p.attr("href");
                 if(isBudget)
                 {
                     direction = directionService.getDirectionByBudgetUrl(url);
@@ -194,7 +196,7 @@ public class LoadManager
                 {
                     direction = directionService.getDirectionByCommerceUrl(url);
                 }
-                ClaimPriorities priority = new ClaimPriorities(direction, isBudget);
+                ClaimPriorities priority = new ClaimPriorities(direction,user,isBudget);
                 user.addPriorities(priority);
             }
             formedClaimAndAdd(currentDirection, rawDataClaim, claimType, user);
@@ -224,11 +226,10 @@ public class LoadManager
             throw new RuntimeException("Не удалось распознать форму обучения (очная | заочная | очно-зачоная форма)");
         return eduType;
     }
-    @Transactional
     private void formedClaimAndAdd(Direction currentDirection, Elements rawUserData, ClaimType claimType, User user) {
         List<Exam> exams = currentDirection.getExams();
-
-        Claim claim = new Claim(user,currentDirection,claimType);
+        Claim claim = Claim.createNewClaim(user,currentDirection,claimType);
+        //Claim claim = new Claim(user,currentDirection,claimType);
         List<Score> scores = new LinkedList<>();
         MetaInfoAboutUserIntoDirection metaInf = currentDirection.getMetaInfo();
         int id = 0;

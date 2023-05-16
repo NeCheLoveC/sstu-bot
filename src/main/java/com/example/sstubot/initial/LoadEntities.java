@@ -35,7 +35,7 @@ public class LoadEntities {
         //HashMap<String, Institute> instituteHashMap =  institutesLoad.load();
         if(instituteService.countInstance() == 0)
             directionLoad.load();
-
+        Map<String, User> userMap = this.loadManager.loadClaims();
         //Map<String, User> users = loadManager.loadClaims(directionList);
         System.out.println("test");
     }

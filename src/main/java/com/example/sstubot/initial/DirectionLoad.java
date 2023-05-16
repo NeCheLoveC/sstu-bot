@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.print.Doc;
 import java.beans.Transient;
 import java.io.IOException;
 import java.util.HashMap;
@@ -125,23 +126,36 @@ public class DirectionLoad
         }
         return resultList;
     }
-
-    private List<Exam> getExams(Direction direction) throws IOException {
-        List<Exam> exams = new LinkedList<>();
-        Document document;
+    //Попытаться определить набор Экзаменов (Или в бюджете или в коммерции)
+    public List<Exam> getExams(Direction direction) throws IOException {
+        List<Document> documents = new LinkedList<>();
         if(validateUrl(direction.getUrlToListOfClaims()))
         {
-            document = Jsoup.connect(direction.getUrlToListOfClaims()).get();
+            documents.add(Jsoup.connect(direction.getUrlToListOfClaims()).get());
         }
-        else if(validateUrl(direction.getUrlToListOfClaimsCommerce()))
+        if(validateUrl(direction.getUrlToListOfClaimsCommerce()))
         {
-            document = Jsoup.connect(direction.getUrlToListOfClaimsCommerce()).get();
+            documents.add(Jsoup.connect(direction.getUrlToListOfClaimsCommerce()).get());
         }
-        else
-        {
+        if(documents.isEmpty())
             direction.setIgnoreDirection(true);
-            return exams;
+        List<Exam> exams = new LinkedList<>();
+        for(Document doc : documents)
+        {
+            List<Exam> buf = tryGetExams(doc);
+            if(!buf.isEmpty())
+            {
+                exams = buf;
+                break;
+            }
         }
+        if(exams.isEmpty())
+            direction.setIgnoreDirection(true);
+        return exams;
+    }
+
+    private List<Exam> tryGetExams(Document document) throws IOException {
+        List<Exam> exams = new LinkedList<>();
         Element thead = document.selectFirst("table thead");
         if(thead == null)
             return exams;

@@ -1,5 +1,6 @@
 package com.example.sstubot.database.model;
 
+import com.example.sstubot.initial.MetaInfoAboutUserIntoDirection;
 import jakarta.persistence.*;
 import org.hibernate.Hibernate;
 
@@ -15,7 +16,9 @@ public class Exam
     // TODO: 13.05.2023 , unique = true 
     @Column(name = "name")
     protected String name;
-
+    @ManyToOne
+    @JoinColumn(name = "meta_id",insertable = false,updatable = false)
+    protected MetaInfoAboutUserIntoDirection metaInfo;
     public Exam(){}
 
     public Exam(String name) {

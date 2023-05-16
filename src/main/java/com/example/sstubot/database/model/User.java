@@ -20,7 +20,7 @@ public class User
     protected boolean originalDocuments = false;
     @OneToMany(mappedBy = "user")
     protected ArrayList<Claim> claims = new ArrayList();
-    @Transient
+    @OneToMany(mappedBy = "user")
     protected List<ClaimPriorities> priorities = new LinkedList<>();
 
     public User(){};

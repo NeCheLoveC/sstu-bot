@@ -29,9 +29,9 @@ public class Direction {
     @ManyToOne
     @JoinColumn(name = "institute_id")
     protected Institute institute;
-    @OneToOne(mappedBy = "direction", optional = true, cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
-    MetaInfoAboutUserIntoDirection metaInfo;
 
+    @OneToOne(mappedBy = "direction", optional = true, cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+    protected MetaInfoAboutUserIntoDirection metaInfo;
     //Особая квота
     @Column(name = "unusual_quota")
     protected int amountUnusualQuota = 0;
@@ -61,9 +61,9 @@ public class Direction {
     @Column(name = "url_to_list_of_claims_commerce",unique = true)
     protected String urlToListOfClaimsCommerce;
     // TODO: 05.05.2023 Вот тут не уверен насчет hibernate
-    @OneToMany
-    @JoinColumn(name = "direction_id")
-    List<Exam> exams = new LinkedList<>();
+    //@OneToMany
+    //@JoinColumn(name = "direction_id")
+    //List<Exam> exams = new LinkedList<>();
     /*
     @Enumerated(EnumType.STRING)
     @Column(name = "direction_type_payment")
@@ -71,6 +71,8 @@ public class Direction {
      */
     @OneToMany(mappedBy = "direction")
     private List<Claim> allClaims = new LinkedList<>();
+    @Transient
+    private List<Claim> newClaims = new LinkedList<>();
     @Transient
     private List<Claim> budgetGeneralListClaims = new LinkedList<Claim>();
     @Transient
@@ -225,13 +227,17 @@ public class Direction {
         this.metaInfo = metaInfo;
     }
 
+    /*
     public List<Exam> getExams() {
         return exams;
     }
+     */
 
+    /*
     public void setExams(List<Exam> exams) {
         this.exams = exams;
     }
+     */
     public void addClaim(Claim claim)
     {
         this.allClaims.add(claim);
@@ -277,5 +283,10 @@ public class Direction {
     @Override
     public int hashCode() {
         return this.name.hashCode();
+    }
+
+    public void addClaimIntoNewClaims(Claim claim)
+    {
+        newClaims.add(claim);
     }
 }
