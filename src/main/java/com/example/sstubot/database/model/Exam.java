@@ -50,5 +50,11 @@ public class Exam
         return getClass().hashCode();
     }
 
+    public MetaInfoAboutUserIntoDirection getMetaInfo() {
+        return metaInfo;
+    }
 
+    public void setMetaInfo(MetaInfoAboutUserIntoDirection metaInfo) {
+        this.metaInfo = metaInfo;
+    }
 }

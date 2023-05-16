@@ -7,6 +7,7 @@ import com.example.sstubot.database.model.urils.EducationType;
 import com.example.sstubot.database.service.DirectionService;
 import com.example.sstubot.database.service.ExamService;
 import com.example.sstubot.database.service.InstituteService;
+import jakarta.annotation.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -74,6 +75,8 @@ public class DirectionLoad
         for(int i = 0; i < elements.size();i++)
         {
             el = elements.get(i); //el == tr - вся строка
+            if(el.firstElementChild().ownText().trim().startsWith("Всего"))
+                continue;
             if(isInstitute(el))
             {
                 //institute = institutes.get();
@@ -93,10 +96,10 @@ public class DirectionLoad
             {
                 if(institute != null)
                 {
-                    if(el.children().get(0).text().startsWith("Всего"))
-                        continue;
                     Direction direction = new Direction();
                     Elements valuesOfDirection = el.children();
+                    if(valuesOfDirection.size() < 18)
+                        throw new RuntimeException("Направление содержит меньше 18 ячеек о СЕБЕ     " + valuesOfDirection.get(0).text());
                     direction.setName(valuesOfDirection.get(0).text());
                     direction.setInstitute(institute);
                     direction.setEducationType(educationType);
@@ -109,17 +112,18 @@ public class DirectionLoad
                     direction.setAmountBudget(Integer.valueOf(valuesOfDirection.get(12).text()));
                     direction.setUrlToListOfClaims(domainUrl + valuesOfDirection.get(14).selectFirst("a").attr("href"));
                     direction.setUrlToListOfClaimsCommerce(domainUrl + valuesOfDirection.get(17).selectFirst("a").attr("href"));
+
+
                     MetaInfoAboutUserIntoDirection metaInfo = formedMetaInfoByDirection(direction);
-                    List<Exam> exams = getExams(direction);
-                    direction.setExams(exams);
-                    examService.save(exams);
+                    //List<Exam> exams = getExams(direction);
+                    //direction.setExams(exams);
+                    //examService.save(exams);
                     if(metaInfo == null)
                         direction.setIgnoreDirection(true);
                     direction.setMetaInfo(metaInfo);
                     //institute.addDirection(direction);
                     directionService.save(direction);
                     resultList.add(direction);
-
                 }
 
             }
@@ -153,7 +157,6 @@ public class DirectionLoad
             direction.setIgnoreDirection(true);
         return exams;
     }
-
     private List<Exam> tryGetExams(Document document) throws IOException {
         List<Exam> exams = new LinkedList<>();
         Element thead = document.selectFirst("table thead");
@@ -179,11 +182,17 @@ public class DirectionLoad
         }
         return exams;
     }
-
+    @Nullable
     private MetaInfoAboutUserIntoDirection formedMetaInfoByDirection(Direction direction) throws IOException {
         String urlBudget = direction.getUrlToListOfClaims();
         String urlCommerce = direction.getUrlToListOfClaimsCommerce();
         MetaInfoAboutUserIntoDirection metaInfo = null;
+        //Проверка есть ли заголовк таблицы
+        //Проверка есть ли tbody
+        //boolean budgetIsExist = false;
+        //boolean commerceIsExist = false;
+
+
         if(validateUrl(urlBudget))
         {
             Document document = Jsoup.connect(urlBudget).get();
@@ -191,6 +200,7 @@ public class DirectionLoad
             if(dataOfHead != null)
             {
                 metaInfo = formedMetaInfo(direction,dataOfHead);
+                //budgetIsExist = true;
             }
         }
         if(metaInfo == null && validateUrl(urlCommerce))
@@ -200,27 +210,51 @@ public class DirectionLoad
             if(dataOfHead != null)
             {
                 metaInfo = formedMetaInfo(direction,dataOfHead);
+                //commerceIsExist = true;
             }
         }
+
+        if(metaInfo == null)
+            System.out.println(direction.getName() + " не имеет структуры (" + direction.getEducationType().name() + ")! Оно будет пропущено при сканировании списков. Метод - formedMetaInfoByDirection");
         return metaInfo;
     }
-
+    @Nullable
     private MetaInfoAboutUserIntoDirection formedMetaInfo(Direction direction,Element tr)
     {
+        if(tr == null)
+            return null;
         MetaInfoAboutUserIntoDirection metaInfo = null;
         int countOfExam = 0;
         Elements listDataOfHead = tr.children();
+        if(listDataOfHead.isEmpty())
+            return null;
+        List<Exam> exams = new LinkedList<>();
         for (int i = MetaInfoAboutUserIntoDirection.AMOUNT_SCORE_ID + 1;i < listDataOfHead.size();i++)
         {
             Element element = listDataOfHead.get(i);
-            if(element.text().matches(".*Сумма\\s+баллов.*"))
+            if(element.ownText().trim().startsWith("Сумма"))
             {
-                metaInfo = new MetaInfoAboutUserIntoDirection(direction,countOfExam);
                 break;
+            }
+            else
+            {
+                //Сформировать новый экзамен
+                Exam exam = new Exam();
+                String examName = element.ownText();
+                exam.setName(examName);
+                exams.add(exam);
             }
             countOfExam++;
         }
-        return metaInfo;
+        if(countOfExam == 0 || exams.isEmpty())
+        {
+            System.out.println("Данное направление " + direction.getName() + " " + direction.getEducationType().name() + "не имеет экзаменов???");
+            return null;
+        }
+        else
+        {
+            return metaInfo = new MetaInfoAboutUserIntoDirection(direction,countOfExam,exams);
+        }
     }
 
     private boolean validateUrl(String url)

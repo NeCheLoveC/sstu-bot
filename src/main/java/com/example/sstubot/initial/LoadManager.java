@@ -24,10 +24,8 @@ import java.util.regex.Pattern;
 public class LoadManager
 {
     private DirectionService directionService;
-    private Map<String, User> userMap;
-    final int USER_CODE_ID = 1;
-    final int AMOUNT_SCORE_ID = 2;
-    final String URL_DOMAIN_PDAGE = "https://abitur.sstu.ru";
+    private Map<String, User> userMap = new HashMap<>();
+    final String URL_DOMAIN_PAGE = "https://abitur.sstu.ru";
     @Autowired
     public LoadManager(DirectionService directionService)
     {
@@ -40,7 +38,6 @@ public class LoadManager
         try
         {
             directionList = directionService.getAllDirection();
-            this.userMap = new HashMap<>();
             loadWrapper(directionList);
         }
         catch (Exception err)
@@ -56,10 +53,10 @@ public class LoadManager
         int a = 0;
         for(Direction direction : directionList)
         {
-            if(direction.getMetaInfo() != null && !direction.isIgnoreDirection())
+            a++;
+            if(!direction.isIgnoreDirection())
             {
                 fillClaimsIntoDirection(direction);
-                a++;
             }
         }
     }
@@ -81,8 +78,10 @@ public class LoadManager
             {
                 // TODO: 07.05.2023 определить какая это таблица
                 //Таблица по целевому,общему и специальному направлению
-                Element divTableName = divTable.select("div.block-title div").get(1);
-                String tableName = divTableName != null ? divTableName.text().trim() : null ;
+                String tableName = divTable.select("div.block-title div").get(1).ownText().trim();
+                //Element divTableName = divTable.select("div.block-title div").get(1);
+                System.out.println(tableName);
+                //String tableName = divTableName != null ? tableName : null ;
                 ClaimType claimType = defineClaimType(tableName);
                 Element tableTBody = divTable.selectFirst("tbody");
                 if(tableTBody == null)
@@ -98,11 +97,11 @@ public class LoadManager
             Element divRaspBlock = documentForCommerce.selectFirst("div.rasp-block");
             if(divRaspBlock != null)
             {
-                Element divTableName = divRaspBlock.select("div.block-title div").get(1);
-                String tableName = divTableName != null ? divTableName.ownText().trim() : null;
+                //Element divTableName = divRaspBlock.select("div.block-title div").get(1);
+                String tableName = divRaspBlock.select("div.block-title div").get(1).ownText().trim();
                 if(!tableName.matches(".*платной.*"))
                     throw new RemoteException("Не распознано название таблицы : " + tableName);
-                Element tbody = divRaspBlock.selectFirst("tbody");
+                Element tbody = divRaspBlock.getElementsByTag("tbody").first();
                 if(tbody != null)
                 {
                     fillClaimIntoDirectionFromTbody(direction, tbody,ClaimType.COMMERCE_GENERAL_LIST);
@@ -136,6 +135,10 @@ public class LoadManager
         {
             claimType = ClaimType.BUDGET_GENERAL_LIST;
         }
+        else if(tableName.matches(".*На платной основе.*"))
+        {
+            claimType = ClaimType.COMMERCE_GENERAL_LIST;
+        }
         else
         {
             throw new RuntimeException("Не распознано имя таблицы : " + tableName);
@@ -163,10 +166,17 @@ public class LoadManager
      */
     private void loadRawClaim(Direction currentDirection, Elements rawDataClaim, ClaimType claimType)
     {
+        if((rawDataClaim.size() - 1) < currentDirection.getMetaInfo().CHAMPION_ID)
+        {
+            //System.out.println("Не удалось распарсить юзера : " + userCode + " по ссылке " + currentDirection.getUrlToListOfClaims());
+            return;
+        }
         String userCode = rawDataClaim.get(MetaInfoAboutUserIntoDirection.USER_CODE_ID).ownText().trim();
+
         //User-id найден впервые -> создаем юзера, заявку и список приоретета
         if(!this.userMap.containsKey(userCode))
         {
+
             String statusOfClaim = rawDataClaim.get(currentDirection.getMetaInfo().CONDITION_ID).text();
             //String typeOfDocument = rawDataClaim.get(currentDirection.getMetaInfo().CONDITION_ID).text();
             Pattern pattern = Pattern.compile("(Подано)|(Зачислен)",Pattern.CASE_INSENSITIVE);
@@ -187,7 +197,7 @@ public class LoadManager
                 boolean isBudget = infoAboutAnotherClaimIntoTitle.matches(".*бюджет.*");
                 EducationType edyType = defineEduTypeByString(infoAboutAnotherClaimIntoTitle);
                 Direction direction;
-                String url = URL_DOMAIN_PDAGE + p.attr("href");
+                String url = URL_DOMAIN_PAGE + p.attr("href").trim();
                 if(isBudget)
                 {
                     direction = directionService.getDirectionByBudgetUrl(url);
@@ -205,8 +215,10 @@ public class LoadManager
         else
         {
             User user = userMap.get(userCode);
-            Pattern pattern = Pattern.compile("(Подано)|(Зачислен)",Pattern.CASE_INSENSITIVE);
-            Matcher matcher = pattern.matcher(rawDataClaim.get(currentDirection.getMetaInfo().CONDITION_ID).text());
+            String statusOfClaim = rawDataClaim.get(currentDirection.getMetaInfo().CONDITION_ID).ownText().trim();
+            System.out.println("user :" + user.getUniqueCode() + " url: " + currentDirection.getUrlToListOfClaims());
+            Pattern pattern = Pattern.compile("(.*Подано.*)|(.*Зачислен.*)",Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pattern.matcher(statusOfClaim);
             boolean isActualClaim = matcher.matches();
             if(!isActualClaim)
                 return;
@@ -216,18 +228,18 @@ public class LoadManager
     private EducationType defineEduTypeByString(String str)
     {
         EducationType eduType;
-        if(str.matches("Очная\\s+форма.*"))
+        if(str.matches(".*Очная\\s+форма.*"))
             eduType = EducationType.OChNAYa;
-        else if(str.matches("Заочная\\s+форма.*"))
+        else if(str.matches(".*Заочная\\s+форма.*"))
             eduType = EducationType.ZAOChNAYa;
-        else if(str.matches("Очно-заочная.*"))
+        else if(str.matches(".*Очно-заочная.*"))
             eduType = EducationType.OChNO_ZAOChNAYa;
         else
             throw new RuntimeException("Не удалось распознать форму обучения (очная | заочная | очно-зачоная форма)");
         return eduType;
     }
     private void formedClaimAndAdd(Direction currentDirection, Elements rawUserData, ClaimType claimType, User user) {
-        List<Exam> exams = currentDirection.getExams();
+        List<Exam> exams = currentDirection.getMetaInfo().getExamList();
         Claim claim = Claim.createNewClaim(user,currentDirection,claimType);
         //Claim claim = new Claim(user,currentDirection,claimType);
         List<Score> scores = new LinkedList<>();

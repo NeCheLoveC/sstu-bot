@@ -26,12 +26,12 @@ public class MetaInfoAboutUserIntoDirection
     )
     @JoinColumn(name = "direction_id", unique = true)
     protected Direction direction;
-    @OneToMany()
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
     @JoinColumn(name = "meta_id")
     @OrderColumn
     List<Exam> examList = new LinkedList<>();
     protected MetaInfoAboutUserIntoDirection(){};
-    public MetaInfoAboutUserIntoDirection(Direction direction,int countExams)
+    public MetaInfoAboutUserIntoDirection(Direction direction,int countExams, List<Exam> exams)
     {
         this.countExams = countExams;
         this.AMOUNT_SCORE_FOR_INDIVIDUAL_ACHIEVEMENTS = countExams + AMOUNT_SCORE_ID + 1;
@@ -41,5 +41,13 @@ public class MetaInfoAboutUserIntoDirection
         this.CHAMPION_ID = CONDITION_ID + 2;
         this.direction = direction;
         direction.setMetaInfo(this);
+        this.examList = exams;
+    }
+    public List<Exam> getExamList() {
+        return examList;
+    }
+
+    public void setExamList(List<Exam> examList) {
+        this.examList = examList;
     }
 }
