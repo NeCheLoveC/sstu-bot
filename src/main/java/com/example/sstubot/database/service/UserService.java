@@ -2,11 +2,11 @@ package com.example.sstubot.database.service;
 
 import com.example.sstubot.database.model.User;
 import com.example.sstubot.database.repositories.UserRepository;
-import jakarta.transaction.UserTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional
@@ -38,5 +38,8 @@ public class UserService
     {
         return userRepository.getUserByUniqueCode(uniqueCode);
     }
-
+    public List<User> getUsersWithOriginal()
+    {
+        return userRepository.getUsersWithOriginal();
+    }
 }

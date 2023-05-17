@@ -1,5 +1,6 @@
 package com.example.sstubot.database.model;
 
+import com.example.sstubot.database.model.urils.ClaimType;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -20,7 +21,11 @@ public class User
     protected boolean originalDocuments = false;
     @OneToMany(mappedBy = "user")
     protected ArrayList<Claim> claims = new ArrayList();
-    @OneToMany(mappedBy = "user")
+    @Transient
+    protected List<Claim> sortedClaims = new LinkedList<>();
+    @OneToMany(cascade = {CascadeType.PERSIST,CascadeType.REMOVE})
+    @JoinColumn(name = "user_id")
+    @OrderColumn
     protected List<ClaimPriorities> priorities = new LinkedList<>();
 
     public User(){};
@@ -70,6 +75,113 @@ public class User
     public void setOriginalDocuments(boolean originalDocuments) {
         this.originalDocuments = originalDocuments;
     }
+
+
+
+    public void sortClaim()
+    {
+        List<ClaimPriorities> budgetPriorities = getClaimPrioritiesIsBudget();
+
+        List<Claim> firstStage = getClaimsForPriorityStage(budgetPriorities);
+        List<Claim> secondStage = getClaimsForSecondStage(budgetPriorities);
+        firstStage.addAll(secondStage);
+        List<Claim> actualClaimsOrder = firstStage;
+
+        this.sortedClaims = actualClaimsOrder;
+
+    }
+    private List<Claim> getClaimsForSecondStage(List<ClaimPriorities> newClaimPriorities)
+    {
+        List<Claim> claimList = new LinkedList<>();
+
+        for(ClaimPriorities cp : newClaimPriorities)
+        {
+            for(Claim c : claims)
+            {
+                if(similar(cp,c) && c.getClaimType().equals(ClaimType.BUDGET_GENERAL_LIST) && !c.isChampion())
+                    claimList.add(c);
+            }
+        }
+        return claimList;
+    }
+
+    private List<Claim> getClaimsForPriorityStage(List<ClaimPriorities> newPriority)
+    {
+        List<Claim> claimsIntoPriorityStage = new LinkedList<>();
+        //Целевые
+        for(ClaimPriorities cp : newPriority)
+        {
+            for(Claim c : claims)
+            {
+                if(similar(cp,c) && c.claimType.equals(ClaimType.BUDGET_TARGET_QUOTA))
+                {
+                    claimsIntoPriorityStage.add(c);
+                }
+            }
+        }
+
+        //Общий конкурс ОЛИМПИАДНИК(БВИ)
+        for(ClaimPriorities cp : newPriority)
+        {
+            for(Claim c : claims)
+            {
+                if(similar(cp,c) && c.claimType.equals(ClaimType.BUDGET_GENERAL_LIST) && c.isChampion())
+                {
+                    claimsIntoPriorityStage.add(c);
+                }
+            }
+        }
+
+        //ОТДЕЛЬНАЯ КВОТА ("СПЕЦИАЛЬНАЯ")
+        for(ClaimPriorities cp : newPriority)
+        {
+            for(Claim c : claims)
+            {
+                if(similar(cp,c) && c.claimType.equals(ClaimType.BUDGET_SPECIAL_QUOTA))
+                {
+                    claimsIntoPriorityStage.add(c);
+                }
+            }
+        }
+
+        //ОСОБАЯ КВОТА
+        for(ClaimPriorities cp : newPriority)
+        {
+            for(Claim c : claims)
+            {
+                if(similar(cp,c) && c.claimType.equals(ClaimType.BUDGET_UNUSUAL_QUOTA))
+                {
+                    claimsIntoPriorityStage.add(c);
+                }
+            }
+        }
+
+        return claimsIntoPriorityStage;
+    }
+
+
+    private List<ClaimPriorities> getClaimPrioritiesIsBudget()
+    {
+        List<ClaimPriorities> claimPriorities = new LinkedList<>();
+
+        for(ClaimPriorities cp : priorities)
+        {
+            if(cp.isBudget)
+                claimPriorities.add(cp);
+        }
+        return claimPriorities;
+    }
+
+
+    private static boolean similar(ClaimPriorities prior, Claim claim)
+    {
+        if(!prior.direction.equals(claim.direction))
+            return false;
+        if(!(prior.isBudget == claim.isBudget()))
+            return false;
+        return true;
+    }
+
     /*
     public void addClaim(Collection<Claim> claim)
     {

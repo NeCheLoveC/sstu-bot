@@ -8,7 +8,8 @@ import java.util.*;
 
 @Entity
 @Table(name = "Claim")
-public class Claim {
+public class Claim implements Comparable<Claim>
+{
     @EmbeddedId
     protected PrimaryKey id = new PrimaryKey();
     @ManyToOne
@@ -29,6 +30,8 @@ public class Claim {
     protected boolean absence = false;
     @OneToMany(mappedBy = "claim")
     protected List<Score> scoreList = new LinkedList<>();
+    @Column(name = "summary_of_score")
+    protected int summaryOfScore = 0;
     protected Claim(){}
     public Claim(User user, Direction direction, ClaimType claimType) {
         //if(user == null || direction == null )
@@ -146,5 +149,36 @@ public class Claim {
 
     public void setAbsence(boolean absence) {
         this.absence = absence;
+    }
+
+    public int getSummaryOfScore() {
+        return summaryOfScore;
+    }
+
+    public void setSummaryOfScore(int summaryOfScore) {
+        this.summaryOfScore = summaryOfScore;
+    }
+
+    @Override
+    public int compareTo(Claim o) {
+        if(o.direction.equals(this.direction))
+            throw new RuntimeException("Claim могут быть сранимы только одинаковых типов, онс ссылаются на разные Direction"
+                    + "\n" + this.direction.urlToListOfClaims
+                    + "\n" + o.direction.urlToListOfClaims
+                    );
+        /*
+        if(o.isBudget() != this.isBudget())
+            throw new RuntimeException("Claim не могу быть сравнимы. Один находится на бюджетной, а второй - на коммерсечской основе");
+         */
+        if(this.getClaimType() != o.getClaimType())
+            throw new RuntimeException("Claim могут быть сранимы только одинаковых типов");
+        if(this.isChampion() != o.isChampion())
+        {
+            if(isChampion())
+                return 1;
+            else
+                return -1;
+        }
+        return this.getSummaryOfScore() - o.getSummaryOfScore();
     }
 }

@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface UserRepository extends JpaRepository<User, Long>
 {
@@ -12,5 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long>
     public boolean existsByUniqueCode(String uniqueCode);
     @Query("select u from User u where u.uniqueCode ilike :uniqueCode")
     public User getUserByUniqueCode(String uniqueCode);
-
+    @Query("select u from User u where u.originalDocuments = true")
+    public List<User> getUsersWithOriginal();
 }

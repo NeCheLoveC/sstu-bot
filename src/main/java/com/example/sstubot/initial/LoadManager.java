@@ -271,17 +271,32 @@ public class LoadManager
         claim.setScoreList(scores);
         String individualAchievements = rawUserData.get(metaInf.AMOUNT_SCORE_FOR_INDIVIDUAL_ACHIEVEMENTS).text();
         int individualScore = 0;
+        String sumScoreRawStr = rawUserData.get(MetaInfoAboutUserIntoDirection.AMOUNT_SCORE_ID).ownText().trim();
+        int sumScore = 0;
+        try
+        {
+            sumScore = Integer.valueOf(sumScore);
+
+        }
+        catch (NumberFormatException err)
+        {
+            System.out.println("Ошибка приведения к числовому виду (сумма баллов)");
+        }
+        claim.setSummaryOfScore(sumScore);
+
         try
         {
             individualScore = Integer.valueOf(individualAchievements);
         }
         catch (NumberFormatException err)
         {
-            System.out.println("Ошибка приведения к чсловому виду (индивидуальные достижения)");
+            System.out.println("Ошибка приведения к чсловому виду (индивидуальные достижения");
         }
-        if(!rawUserData.get(metaInf.CHAMPION_ID).ownText().matches("\\s*"))
-            claim.setChampion(true);
         claim.setCountScoreForIndividualAchievements(individualScore);
+
+        claim.setSummaryOfScore(sumScore);
+        if(!rawUserData.get(metaInf.CHAMPION_ID).ownText().trim().matches("\\s*—\\s*"))
+            claim.setChampion(true);
         //user.addClaim(claim);
     }
 

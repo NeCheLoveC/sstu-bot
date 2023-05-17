@@ -1,6 +1,8 @@
 package com.example.sstubot.database.model;
 
 import com.example.sstubot.database.model.urils.ClaimType;
+import com.example.sstubot.database.model.urils.ContainerClaims;
+import com.example.sstubot.database.model.urils.ContainerCommerce;
 import com.example.sstubot.database.model.urils.EducationType;
 import com.example.sstubot.initial.MetaInfoAboutUserIntoDirection;
 import jakarta.persistence.*;
@@ -74,15 +76,16 @@ public class Direction {
     @Transient
     private List<Claim> newClaims = new LinkedList<>();
     @Transient
-    private List<Claim> budgetGeneralListClaims = new LinkedList<Claim>();
+    private ContainerClaims budgetGeneralListClaims;
     @Transient
-    private List<Claim> budgetSpecialQuotaClaims = new LinkedList<Claim>();
+    private ContainerClaims budgetSpecialQuotaClaims = new ContainerClaims(amountSpecialQuota, ClaimType.BUDGET_SPECIAL_QUOTA);
     @Transient
-    private List<Claim> budgetTargetQuotaClaims = new LinkedList<Claim>();
+    private ContainerClaims budgetTargetQuotaClaims = new ContainerClaims(amountTargetQuota, ClaimType.BUDGET_TARGET_QUOTA);
     @Transient
-    private List<Claim> budgetUnusualQuotaClaims = new LinkedList<Claim>();
+    private ContainerClaims budgetUnusualQuotaClaims = new ContainerClaims(amountUnusualQuota, ClaimType.BUDGET_UNUSUAL_QUOTA);
     @Transient
-    private List<Claim> commerceGeneralListClaims = new LinkedList<>();
+    private ContainerCommerce commerceGeneralListClaims = new ContainerCommerce();
+    //Сколько на текущий момент заполнено на N конкурс
     @Transient
     protected int reservedUnusualQuota = 0;
     @Transient
@@ -90,7 +93,20 @@ public class Direction {
     @Transient
     protected int reservedTargetQuota = 0;
     @Transient
-    protected int amountBudgetFinal = 0;
+    protected int reservedBudgetGeneral = 0;
+    //Сколько обычные списки могут вмещать после вычета за все квоты
+    @Transient
+    protected int maxBudgetGeneralFinal = 0;
+
+    //Текущий минимальный балл на специальность по N конкурсу
+    @Transient
+    protected int minScoreTarget = 0;
+    @Transient
+    protected int minScoreSpecial = 0;
+    @Transient
+    protected int minScoreUnusual = 0;
+    @Transient
+    protected int minScoreBudgetGeneral = 0;
 
     public Direction(){}
 
@@ -165,14 +181,6 @@ public class Direction {
 
     public void setReservedTargetQuota(int reservedTargetQuota) {
         this.reservedTargetQuota = reservedTargetQuota;
-    }
-
-    public int getAmountBudgetFinal() {
-        return amountBudgetFinal;
-    }
-
-    public void setAmountBudgetFinal(int amountBudgetFinal) {
-        this.amountBudgetFinal = amountBudgetFinal;
     }
 
     public Long getId() {
@@ -259,8 +267,6 @@ public class Direction {
         this.ignoreDirection = ignoreDirection;
     }
 
-
-
     /*
     public DirectionType getDirectionTypePayment() {
         return directionTypePayment;
@@ -288,5 +294,22 @@ public class Direction {
     public void addClaimIntoNewClaims(Claim claim)
     {
         newClaims.add(claim);
+    }
+
+    public int getReservedBudgetGeneral()
+    {
+        return reservedBudgetGeneral;
+    }
+
+    public void setReservedBudgetGeneral(int reservedBudgetGeneral) {
+        this.reservedBudgetGeneral = reservedBudgetGeneral;
+    }
+
+    public int getMaxBudgetGeneralFinal() {
+        return maxBudgetGeneralFinal;
+    }
+
+    public void setMaxBudgetGeneralFinal(int maxBudgetGeneralFinal) {
+        this.maxBudgetGeneralFinal = maxBudgetGeneralFinal;
     }
 }
