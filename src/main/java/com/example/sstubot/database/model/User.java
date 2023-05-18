@@ -19,7 +19,7 @@ public class User
     protected String uniqueCode;
     @Column(name = "original_documents")
     protected boolean originalDocuments = false;
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
     protected ArrayList<Claim> claims = new ArrayList();
     @Transient
     protected List<Claim> sortedClaims = new LinkedList<>();
@@ -27,6 +27,18 @@ public class User
     @JoinColumn(name = "user_id")
     @OrderColumn
     protected List<ClaimPriorities> priorities = new LinkedList<>();
+    @OneToOne
+    @JoinTable(
+            name = "user_win_claim",
+            joinColumns =
+            @JoinColumn(name = "user_id"),
+            inverseJoinColumns = {
+                    @JoinColumn(name = "claim_user_id", referencedColumnName = "user_id"),
+                    @JoinColumn(name = "direction_id", referencedColumnName = "direction_id"),
+                    @JoinColumn(name = "claim_type", referencedColumnName = "claim_type"),
+            }
+    )
+    protected Claim winClaim;
 
     public User(){};
 
@@ -76,7 +88,16 @@ public class User
         this.originalDocuments = originalDocuments;
     }
 
+    public Claim getWinClaim() {
+        return winClaim;
+    }
 
+    public void setWinClaim(Claim winClaim) {
+        if(this.winClaim != null)
+            this.winClaim.setWin(false);
+        this.winClaim = winClaim;
+        this.winClaim.setWin(true);
+    }
 
     public void sortClaim()
     {
@@ -182,6 +203,9 @@ public class User
         return true;
     }
 
+    public List<Claim> getSortedClaims() {
+        return sortedClaims;
+    }
     /*
     public void addClaim(Collection<Claim> claim)
     {

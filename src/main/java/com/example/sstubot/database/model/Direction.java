@@ -312,4 +312,48 @@ public class Direction {
     public void setMaxBudgetGeneralFinal(int maxBudgetGeneralFinal) {
         this.maxBudgetGeneralFinal = maxBudgetGeneralFinal;
     }
+
+    public boolean canAddIntoTarget(Claim claim)
+    {
+        return budgetTargetQuotaClaims.canAddClaim(claim);
+    }
+
+    public boolean canAddIntoSpecial(Claim claim)
+    {
+        return budgetSpecialQuotaClaims.canAddClaim(claim);
+    }
+
+    public boolean canAddIntoUnusual(Claim claim)
+    {
+        return budgetUnusualQuotaClaims.canAddClaim(claim);
+    }
+
+    public boolean canAddIntoGeneralList(Claim claim)
+    {
+        return budgetGeneralListClaims.canAddClaim(claim);
+    }
+
+    public boolean canAddIntoCommerce(Claim claim)
+    {
+        return true;
+    }
+
+    public Claim addClaimIntoList(Claim claim)
+    {
+        switch (claim.getClaimType())
+        {
+            case BUDGET_SPECIAL_QUOTA:
+                return budgetSpecialQuotaClaims.addClaimIntoContainer(claim);
+            case BUDGET_TARGET_QUOTA:
+                return budgetTargetQuotaClaims.addClaimIntoContainer(claim);
+            case BUDGET_UNUSUAL_QUOTA:
+                return budgetUnusualQuotaClaims.addClaimIntoContainer(claim);
+            case BUDGET_GENERAL_LIST:
+                return budgetGeneralListClaims.addClaimIntoContainer(claim);
+            case COMMERCE_GENERAL_LIST:
+                return commerceGeneralListClaims.addClaimIntoContainer(claim);
+            default:
+                throw new RuntimeException("Не распознан тип заявки... (INTO switch/case");
+        }
+    }
 }

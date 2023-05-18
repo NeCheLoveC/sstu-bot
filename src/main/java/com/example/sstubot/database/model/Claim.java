@@ -28,10 +28,12 @@ public class Claim implements Comparable<Claim>
     protected boolean champion = false;
     @Column(name = "absence")
     protected boolean absence = false;
-    @OneToMany(mappedBy = "claim")
+    @OneToMany(mappedBy = "claim", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
     protected List<Score> scoreList = new LinkedList<>();
     @Column(name = "summary_of_score")
     protected int summaryOfScore = 0;
+    @Column(name = "is_win")
+    protected boolean isWin = false;
     protected Claim(){}
     public Claim(User user, Direction direction, ClaimType claimType) {
         //if(user == null || direction == null )
@@ -157,6 +159,14 @@ public class Claim implements Comparable<Claim>
 
     public void setSummaryOfScore(int summaryOfScore) {
         this.summaryOfScore = summaryOfScore;
+    }
+
+    public boolean isWin() {
+        return isWin;
+    }
+
+    public void setWin(boolean win) {
+        isWin = win;
     }
 
     @Override

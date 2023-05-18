@@ -53,10 +53,20 @@ public class ContainerClaims
             i++;
         }
         claims.add(i,claim);
+        claim.getUser().setWinClaim(claim);
+        refreshMinScore();
         return removedClaim;
     }
 
-    private boolean canAddClaim(Claim claim)
+    private void refreshMinScore()
+    {
+        if(!claims.isEmpty())
+        {
+            this.minScoreForAdd = this.claims.get(this.claims.size() - 1).getSummaryOfScore();
+        }
+    }
+
+    public boolean canAddClaim(Claim claim)
     {
         if(!claim.getClaimType().equals(claimType))
             throw new RuntimeException("Данный контейнер не подходит для данного типы заявки");

@@ -249,6 +249,10 @@ public class LoadManager
         {
             int points = 0;
             Score score = new Score();
+            score.setExam(exams.get(id));
+            score.setScore(points);
+            score.setClaim(claim);
+            scores.add(score);
             try
             {
                 points = Integer.valueOf(rawUserData.get(i).text().trim());
@@ -259,13 +263,10 @@ public class LoadManager
                 + currentDirection.getName() + "\nПользователь: " + user.getUniqueCode()
                 );
                 score.setAbsence(true);
-                claim.setAbsence(true);
+                //claim.setAbsence(true);
             }
 
-            score.setExam(exams.get(id));
-            score.setScore(points);
-            score.setClaim(claim);
-            scores.add(score);
+
             id++;
         }
         claim.setScoreList(scores);

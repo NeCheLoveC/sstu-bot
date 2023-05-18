@@ -53,7 +53,8 @@ public class ContainerCommerce
             i++;
         }
         claims.add(i,claim);
-        this.minScoreForAdd = claims.get(claims.size() - 1).getSummaryOfScore();
+        claim.getUser().setWinClaim(claim);
+        //this.minScoreForAdd = claims.get(claims.size() - 1).getSummaryOfScore();
         return removedClaim;
     }
     private boolean canAddClaim(Claim claim)

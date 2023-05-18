@@ -17,7 +17,7 @@ public class Score
     @JoinColumns(value = {@JoinColumn(name = "user_id",referencedColumnName = "user_id"), @JoinColumn(name = "direction_id", referencedColumnName = "direction_id")})
     protected Claim claim;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "exam_id")
     protected Exam exam;
     @Column(name = "absence")
@@ -59,5 +59,6 @@ public class Score
 
     public void setAbsence(boolean absence) {
         this.absence = absence;
+        claim.setAbsence(absence);
     }
 }
