@@ -45,7 +45,7 @@ public class LoadEntities {
         //Зачисление в Direction
         clearLastTry(userSerivce);
         enrollUser(userCollection);
-
+        System.out.println("test");
         for(User u : userCollection)
         {
             userSerivce.save(u);
