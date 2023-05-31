@@ -112,12 +112,7 @@ public class DirectionLoad
                     direction.setAmountBudget(Integer.valueOf(valuesOfDirection.get(12).text()));
                     direction.setUrlToListOfClaims(domainUrl + valuesOfDirection.get(14).selectFirst("a").attr("href"));
                     direction.setUrlToListOfClaimsCommerce(domainUrl + valuesOfDirection.get(17).selectFirst("a").attr("href"));
-
-
                     MetaInfoAboutUserIntoDirection metaInfo = formedMetaInfoByDirection(direction);
-                    //List<Exam> exams = getExams(direction);
-                    //direction.setExams(exams);
-                    //examService.save(exams);
                     if(metaInfo == null)
                         direction.setIgnoreDirection(true);
                     direction.setMetaInfo(metaInfo);
@@ -182,17 +177,14 @@ public class DirectionLoad
         }
         return exams;
     }
+
+    //Проверка есть ли заголовк таблицы
+    //Проверка есть ли tbody
     @Nullable
     private MetaInfoAboutUserIntoDirection formedMetaInfoByDirection(Direction direction) throws IOException {
         String urlBudget = direction.getUrlToListOfClaims();
         String urlCommerce = direction.getUrlToListOfClaimsCommerce();
         MetaInfoAboutUserIntoDirection metaInfo = null;
-        //Проверка есть ли заголовк таблицы
-        //Проверка есть ли tbody
-        //boolean budgetIsExist = false;
-        //boolean commerceIsExist = false;
-
-
         if(validateUrl(urlBudget))
         {
             Document document = Jsoup.connect(urlBudget).get();
@@ -200,7 +192,6 @@ public class DirectionLoad
             if(dataOfHead != null)
             {
                 metaInfo = formedMetaInfo(direction,dataOfHead);
-                //budgetIsExist = true;
             }
         }
         if(metaInfo == null && validateUrl(urlCommerce))
@@ -213,9 +204,10 @@ public class DirectionLoad
                 //commerceIsExist = true;
             }
         }
-
         if(metaInfo == null)
-            System.out.println(direction.getName() + " не имеет структуры (" + direction.getEducationType().name() + ")! Оно будет пропущено при сканировании списков. Метод - formedMetaInfoByDirection");
+            System.out.println(direction.getName() + " не имеет структуры " +
+                    "(" + direction.getEducationType().name() + ")! " +
+                    "Направление будет пропущено при сканировании списков.");
         return metaInfo;
     }
     @Nullable

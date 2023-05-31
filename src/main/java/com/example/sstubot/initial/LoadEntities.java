@@ -34,12 +34,12 @@ public class LoadEntities {
         System.out.println("test");
     }
 
-
+    @Transactional
     public void load()
     {
         //HashMap<String, Institute> instituteHashMap =  institutesLoad.load();
         if(instituteService.countInstance() == 0)
-            directionLoad.load();
+            directionLoad.load(); // Загрузка институтов с направлениями
         Map<String, User> userMap = this.loadManager.loadClaims();
         Collection<User> userCollection = sortClaimsIntoUsers(userMap.values());
         //Зачисление в Direction
@@ -53,6 +53,9 @@ public class LoadEntities {
 
         //Загрузка юзеров
         Collection<User> userCollection2 = userCollection;
+        System.out.println("test");
+        enrollmentUserIntoDirectionsFirstStage(userCollection2);
+        enrollmentUserIntoDirectionsSecondStage(userCollection2);
         System.out.println("test");
     }
     @Transactional
@@ -79,13 +82,13 @@ public class LoadEntities {
     {
         int count = 0;
         Collection<User> allUsers = users;
-        List<User> userListWithOriginal = new LinkedList<>(users.stream().filter(x -> x.isOriginalDocuments()).toList());
+        //List<User> userListWithOriginal = new LinkedList<>(users.stream().filter(x -> x.isOriginalDocuments()).toList());
         //Set<Direction> directionSet = directionLoad
         //Нужно получить всех пользователей с оригиналами!
         while(true)
         {
             // TODO: 18.05.2023 Нужно проходиться по юзерам и обновлять список
-            ListIterator<User> iter = userListWithOriginal.listIterator();
+            ListIterator<User> iter = users.stream().toList().listIterator();
             while(iter.hasNext())
             {
                 User user = iter.next();
@@ -120,8 +123,11 @@ public class LoadEntities {
                                 claim = direction.addClaimIntoList(claim);
                             break;
                         case COMMERCE_GENERAL_LIST:
+                            /*
                             if(canAdd = direction.canAddIntoCommerce(claim))
                                 claim = direction.addClaimIntoList(claim);
+
+                             */
                             break;
                         default:
                             throw new RuntimeException("Не распознан тип заявки... (INTO switch/case");
@@ -129,12 +135,8 @@ public class LoadEntities {
                     if(canAdd)
                     {
                         count++;
-                        //iter.remove();
                     }
-                    /*
-                    if(claim != null)
-                        iter.add(claim.getUser());
-                     */
+
                 }
             }
             if(count == 0)

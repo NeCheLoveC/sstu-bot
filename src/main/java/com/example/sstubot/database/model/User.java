@@ -15,11 +15,11 @@ public class User
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     protected Long id;
-    @Column(name = "unique_code")
+    @Column(name = "unique_code", unique = true)
     protected String uniqueCode;
     @Column(name = "original_documents")
     protected boolean originalDocuments = false;
-    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.REMOVE})
     protected ArrayList<Claim> claims = new ArrayList();
     @Transient
     protected List<Claim> sortedClaims = new LinkedList<>();
@@ -27,7 +27,8 @@ public class User
     @JoinColumn(name = "user_id")
     @OrderColumn
     protected List<ClaimPriorities> priorities = new LinkedList<>();
-    @OneToOne
+
+    /*
     @JoinTable(
             name = "user_win_claim",
             joinColumns =
@@ -38,7 +39,12 @@ public class User
                     @JoinColumn(name = "claim_type", referencedColumnName = "claim_type"),
             }
     )
+     */
+    // TODO: 31.05.2023 РЕАЛИЗОВАТЬ ссылку на составной первичный ключ
+
+    @Transient
     protected Claim winClaim;
+
 
     public User(){};
 
@@ -93,10 +99,19 @@ public class User
     }
 
     public void setWinClaim(Claim winClaim) {
-        if(this.winClaim != null)
-            this.winClaim.setWin(false);
-        this.winClaim = winClaim;
-        this.winClaim.setWin(true);
+        if(winClaim == null)
+        {
+            if(this.winClaim != null)
+                this.winClaim.setWin(false);
+            this.winClaim = null;
+        }
+        else
+        {
+            if(!winClaim.getUser().equals(this))
+                throw new RuntimeException("Попытка добавления winClaim пользователю, не владеющего данной заявкой");
+            this.winClaim = winClaim;
+            this.winClaim.setWin(true);
+        }
     }
 
     public void sortClaim()
@@ -202,6 +217,8 @@ public class User
             return false;
         return true;
     }
+
+
 
     public List<Claim> getSortedClaims() {
         return sortedClaims;

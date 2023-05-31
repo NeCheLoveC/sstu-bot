@@ -18,8 +18,10 @@ public class ContainerCommerce
         this.claimType = ClaimType.COMMERCE_GENERAL_LIST;
     }
 
-    //true - если добавить в список можно
-    //false - если добавить нельзя т.к не хватает проходных балов или мест
+
+
+
+    //null - если при добавлении заявки не было вытеснено другого абитуриента
     @Nullable
     public Claim addClaimIntoContainer(Claim claim)
     {

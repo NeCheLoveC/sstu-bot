@@ -68,12 +68,11 @@ public class LoadManager
         //Заполнение Claim бюджет
         if(validateURLtoClaims(direction.getUrlToListOfClaims()))
         {
-            //urlToBudgetClaim = URL_ADDRESS_TO_LIST + direction.getUrlToListOfClaims();
             urlToBudgetClaim = direction.getUrlToListOfClaims();
             Document document = Jsoup.connect(urlToBudgetClaim).get();
-            Elements divTables = document.select("div.rasp-block"); //Каждый блок содержит название таблицы и саму таблицу
-            //Elements tbodyOfUsers = document.select("tbody.text-center");
-            //Для бюджета
+            //Каждый блок содержит название таблицы и саму таблицу
+            Elements divTables = document.select("div.rasp-block");
+
             for(Element divTable : divTables)
             {
                 // TODO: 07.05.2023 определить какая это таблица
@@ -92,12 +91,10 @@ public class LoadManager
         //Заполение Claim на коммерцию
         if(validateURLtoClaims(direction.getUrlToListOfClaimsCommerce()))
         {
-            //Document documentForCommerce = Jsoup.connect(URL_ADDRESS_TO_LIST + direction.getUrlToListOfClaimsCommerce()).get();
             Document documentForCommerce = Jsoup.connect(direction.getUrlToListOfClaimsCommerce()).get();
             Element divRaspBlock = documentForCommerce.selectFirst("div.rasp-block");
             if(divRaspBlock != null)
             {
-                //Element divTableName = divRaspBlock.select("div.block-title div").get(1);
                 String tableName = divRaspBlock.select("div.block-title div").get(1).ownText().trim();
                 if(!tableName.matches(".*платной.*"))
                     throw new RemoteException("Не распознано название таблицы : " + tableName);
@@ -209,7 +206,7 @@ public class LoadManager
                 ClaimPriorities priority = new ClaimPriorities(direction,user,isBudget);
                 user.addPriorities(priority);
             }
-            formedClaimAndAdd(currentDirection, rawDataClaim, claimType, user);
+            formedClaimAndAddIntoInsitute(currentDirection, rawDataClaim, claimType, user);
             this.userMap.put(userCode,user);
         }
         else
@@ -222,7 +219,7 @@ public class LoadManager
             boolean isActualClaim = matcher.matches();
             if(!isActualClaim)
                 return;
-            formedClaimAndAdd(currentDirection, rawDataClaim, claimType, user);
+            formedClaimAndAddIntoInsitute(currentDirection, rawDataClaim, claimType, user);
         }
     }
     private EducationType defineEduTypeByString(String str)
@@ -238,10 +235,9 @@ public class LoadManager
             throw new RuntimeException("Не удалось распознать форму обучения (очная | заочная | очно-зачоная форма)");
         return eduType;
     }
-    private void formedClaimAndAdd(Direction currentDirection, Elements rawUserData, ClaimType claimType, User user) {
+    private void formedClaimAndAddIntoInsitute(Direction currentDirection, Elements rawUserData, ClaimType claimType, User user) {
         List<Exam> exams = currentDirection.getMetaInfo().getExamList();
         Claim claim = Claim.createNewClaim(user,currentDirection,claimType);
-        //Claim claim = new Claim(user,currentDirection,claimType);
         List<Score> scores = new LinkedList<>();
         MetaInfoAboutUserIntoDirection metaInf = currentDirection.getMetaInfo();
         int id = 0;
@@ -263,10 +259,7 @@ public class LoadManager
                 + currentDirection.getName() + "\nПользователь: " + user.getUniqueCode()
                 );
                 score.setAbsence(true);
-                //claim.setAbsence(true);
             }
-
-
             id++;
         }
         claim.setScoreList(scores);

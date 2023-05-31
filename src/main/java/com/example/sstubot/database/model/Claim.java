@@ -23,7 +23,7 @@ public class Claim implements Comparable<Claim>
     protected ClaimType claimType;
     @Column(name = "countScore_for_individual_achievements")
     protected int countScoreForIndividualAchievements = 0;
-    // TODO: 25.12.2022 ПЕРЕИМЕНОВАТЬ 
+
     @Column(name = "champion")
     protected boolean champion = false;
     @Column(name = "absence")
@@ -53,12 +53,7 @@ public class Claim implements Comparable<Claim>
     }
     public static Claim createNewClaim(User user, Direction direction, ClaimType claimType)
     {
-        Claim claim = new Claim();
-        claim.direction = direction;
-        claim.user = user;
-        claim.claimType = claimType;
-        direction.addClaimIntoNewClaims(claim);
-        user.addClaim(claim);
+        Claim claim = new Claim(user,direction,claimType);
         return claim;
     }
 

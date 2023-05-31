@@ -1,6 +1,7 @@
 package com.example.sstubot.database.model.urils;
 
 import com.example.sstubot.database.model.Claim;
+import com.example.sstubot.database.model.User;
 import jakarta.annotation.Nullable;
 
 import java.util.*;
@@ -38,22 +39,60 @@ public class ContainerClaims
     //Перед вставкой обязательно проверка на canAddClaim(Claim)
     private Claim addClaim(Claim claim)
     {
+        /*
+        1 - При успешном добавлени пользователь есть несколько вариантов:
+            - пользователь добавлен т.к есть СВОБОДНЫЕ места, никого не вытеснили -> метод вернет null
+            - свободных мест нет, НО у пользователя больше баллов чем у последнего в списке -> метод вернет последнего в спике т.к. он будет вытолкнут из этой очереди
+            - если нет заявок - пользователь добавляется в очередь - return null
+         */
         Claim removedClaim = null;
-        ListIterator<Claim> iterator = claims.listIterator();
-        int i = 0;
-        while (iterator.hasNext())
+        if(maxSize > currentSize() && currentSize() == 0)
         {
-            Claim c = iterator.next();
-            int compareResult = claim.compareTo(c);
-            if(compareResult > 0)
-            {
-                removedClaim = c;
-                break;
-            }
-            i++;
+            claims.add(claim);
+            User user = claim.getUser();
+            user.setWinClaim(claim);
         }
-        claims.add(i,claim);
-        claim.getUser().setWinClaim(claim);
+        else if(maxSize > currentSize())
+        {
+            ListIterator<Claim> iterator = claims.listIterator();
+            int i = 0;
+            Claim c;
+            while (iterator.hasNext())
+            {
+                c = iterator.next();
+                int compareResult = claim.compareTo(c);
+                if(compareResult > 0)
+                {
+                    break;
+                }
+                i++;
+            }
+            claims.add(i,claim);
+            User user = claim.getUser();
+            user.setWinClaim(claim);
+        }
+        else
+        {
+            ListIterator<Claim> iterator = claims.listIterator();
+            int i = 0;
+            Claim c;
+            while (iterator.hasNext())
+            {
+                c = iterator.next();
+                int compareResult = claim.compareTo(c);
+                if(compareResult > 0)
+                {
+                    removedClaim = getLastElementIfExist();
+                    break;
+                }
+                i++;
+            }
+            claims.add(i,claim);
+            User user = claim.getUser();
+            user.setWinClaim(claim);
+            claims.remove(removedClaim);
+            removedClaim.getUser().setWinClaim(null);
+        }
         refreshMinScore();
         return removedClaim;
     }
@@ -97,5 +136,10 @@ public class ContainerClaims
             return claims.get(claims.size() - 1);
         }
         return null;
+    }
+
+    public int currentSize()
+    {
+        return claims.size();
     }
 }

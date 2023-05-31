@@ -38,17 +38,16 @@ public class InstitutesLoad
         try {
             Document document = Jsoup.connect(urlListOfDirections).get();
             Elements elements = document.getElementsByClass("table-structure-subtitle");
-            //elements.remove(elements.size() - 1);
+
             for(Element element : elements)
             {
                 Institute institute = new Institute();
                 institute.setName(element.text());
                 result.put(institute.getName(),institute);
-                //instituteService.save(institute);
+                instituteService.save(institute);
             }
         }
         catch (IOException err){
-            //отправить в лог
             System.out.println(err);
         }
         return result;
