@@ -1,9 +1,6 @@
 package com.example.sstubot.database.model;
 
-import com.example.sstubot.database.model.urils.ClaimType;
-import com.example.sstubot.database.model.urils.ContainerClaims;
-import com.example.sstubot.database.model.urils.ContainerCommerce;
-import com.example.sstubot.database.model.urils.EducationType;
+import com.example.sstubot.database.model.urils.*;
 import com.example.sstubot.initial.MetaInfoAboutUserIntoDirection;
 import jakarta.persistence.*;
 import org.hibernate.Hibernate;
@@ -75,43 +72,29 @@ public class Direction {
     private List<Claim> allClaims = new LinkedList<>();
     @Transient
     private List<Claim> newClaims = new LinkedList<>();
-    @Transient
-    private ContainerClaims budgetGeneralListClaims;
-    @Transient
-    private ContainerClaims budgetSpecialQuotaClaims = new ContainerClaims(amountSpecialQuota, ClaimType.BUDGET_SPECIAL_QUOTA);
-    @Transient
-    private ContainerClaims budgetTargetQuotaClaims = new ContainerClaims(amountTargetQuota, ClaimType.BUDGET_TARGET_QUOTA);
-    @Transient
-    private ContainerClaims budgetUnusualQuotaClaims = new ContainerClaims(amountUnusualQuota, ClaimType.BUDGET_UNUSUAL_QUOTA);
-    @Transient
-    private ContainerCommerce commerceGeneralListClaims = new ContainerCommerce();
-    //Сколько на текущий момент заполнено на N конкурс
-    @Transient
-    protected int reservedUnusualQuota = 0;
-    @Transient
-    protected int reservedSpecialQuota = 0;
-    @Transient
-    protected int reservedTargetQuota = 0;
-    @Transient
-    protected int reservedBudgetGeneral = 0;
-    //Сколько обычные списки могут вмещать после вычета за все квоты
-    @Transient
-    protected int maxBudgetGeneralFinal = 0;
 
-    //Текущий минимальный балл на специальность по N конкурсу
+    public void refreshGeneralList()
+    {
+        budgetGeneralListClaims.refreshClaims();
+    }
     @Transient
-    protected int minScoreTarget = 0;
+    private GeneralListContainer budgetGeneralListClaims;
     @Transient
-    protected int minScoreSpecial = 0;
+    private ContainerQuotaClaims budgetSpecialQuotaClaims; //= new ContainerQuotaClaims(amountSpecialQuota, ClaimType.BUDGET_SPECIAL_QUOTA);
     @Transient
-    protected int minScoreUnusual = 0;
+    private ContainerQuotaClaims budgetTargetQuotaClaims;// = new ContainerQuotaClaims(amountTargetQuota, ClaimType.BUDGET_TARGET_QUOTA);
     @Transient
-    protected int minScoreBudgetGeneral = 0;
+    private ContainerQuotaClaims budgetUnusualQuotaClaims;// = new ContainerQuotaClaims(amountUnusualQuota, ClaimType.BUDGET_UNUSUAL_QUOTA);
+    @Transient
+    private ContainerCommerce commerceGeneralListClaims;// = new ContainerCommerce();
 
-    public Direction(){}
+    public Direction()
+    {
+    }
 
     public Direction(String name, Institute institute, EducationType educationType,MetaInfoAboutUserIntoDirection metaInfo)
     {
+        this();
         this.name = name;
         this.institute = institute;
         this.educationType = educationType;
@@ -167,22 +150,6 @@ public class Direction {
         this.amountMainBudgetIntoPlan = amountMainBudgetIntoPlan;
     }
 
-    public int getReservedSpecialQuota() {
-        return reservedSpecialQuota;
-    }
-
-    public void setReservedSpecialQuota(int reservedSpecialQuota) {
-        this.reservedSpecialQuota = reservedSpecialQuota;
-    }
-
-    public int getReservedTargetQuota() {
-        return reservedTargetQuota;
-    }
-
-    public void setReservedTargetQuota(int reservedTargetQuota) {
-        this.reservedTargetQuota = reservedTargetQuota;
-    }
-
     public Long getId() {
         return id;
     }
@@ -201,14 +168,6 @@ public class Direction {
 
     public void setAmountUnusualQuota(int unusualQuota) {
         this.amountUnusualQuota = unusualQuota;
-    }
-
-    public int getReservedUnusualQuota() {
-        return reservedUnusualQuota;
-    }
-
-    public void setReservedUnusualQuota(int reservedUnusualQuota) {
-        this.reservedUnusualQuota = reservedUnusualQuota;
     }
 
     public String getUrlToListOfClaims() {
@@ -296,23 +255,6 @@ public class Direction {
         newClaims.add(claim);
     }
 
-    public int getReservedBudgetGeneral()
-    {
-        return reservedBudgetGeneral;
-    }
-
-    public void setReservedBudgetGeneral(int reservedBudgetGeneral) {
-        this.reservedBudgetGeneral = reservedBudgetGeneral;
-    }
-
-    public int getMaxBudgetGeneralFinal() {
-        return maxBudgetGeneralFinal;
-    }
-
-    public void setMaxBudgetGeneralFinal(int maxBudgetGeneralFinal) {
-        this.maxBudgetGeneralFinal = maxBudgetGeneralFinal;
-    }
-
     public boolean canAddIntoTarget(Claim claim)
     {
         return budgetTargetQuotaClaims.canAddClaim(claim);
@@ -352,6 +294,52 @@ public class Direction {
                 return budgetGeneralListClaims.addClaimIntoContainer(claim);
             case COMMERCE_GENERAL_LIST:
                 return commerceGeneralListClaims.addClaimIntoContainer(claim);
+            default:
+                throw new RuntimeException("Не распознан тип заявки... (INTO switch/case");
+        }
+    }
+
+    public GeneralListContainer getBudgetGeneralListClaims() {
+        return budgetGeneralListClaims;
+    }
+
+    public void setBudgetGeneralListClaims(GeneralListContainer budgetGeneralListClaims) {
+        this.budgetGeneralListClaims = budgetGeneralListClaims;
+    }
+
+    public int amountReservedByQuot()
+    {
+        return budgetTargetQuotaClaims.currentSize();
+    }
+
+    public void initContainers()
+    {
+        this.budgetUnusualQuotaClaims = new ContainerQuotaClaims(amountUnusualQuota, ClaimType.BUDGET_UNUSUAL_QUOTA);
+        this.budgetSpecialQuotaClaims = new ContainerQuotaClaims(amountSpecialQuota, ClaimType.BUDGET_SPECIAL_QUOTA);
+        this.budgetTargetQuotaClaims = new ContainerQuotaClaims(amountTargetQuota, ClaimType.BUDGET_TARGET_QUOTA);
+        this.commerceGeneralListClaims = new ContainerCommerce();
+        this.budgetGeneralListClaims = new GeneralListContainer(() -> {return this.budgetTargetQuotaClaims.currentSize() + this.budgetSpecialQuotaClaims.currentSize() + this.budgetUnusualQuotaClaims.currentSize();}, amountMainBudgetIntoPlan);
+    }
+
+    public void deleteClaim(Claim claim)
+    {
+        switch (claim.getClaimType())
+        {
+            case BUDGET_SPECIAL_QUOTA:
+                budgetSpecialQuotaClaims.removeClaimFromList(claim);
+                break;
+            case BUDGET_TARGET_QUOTA:
+                budgetTargetQuotaClaims.removeClaimFromList(claim);
+                break;
+            case BUDGET_UNUSUAL_QUOTA:
+                budgetUnusualQuotaClaims.removeClaimFromList(claim);
+                break;
+            case BUDGET_GENERAL_LIST:
+                budgetGeneralListClaims.removeClaimFromList(claim);
+                break;
+            case COMMERCE_GENERAL_LIST:
+                commerceGeneralListClaims.removeClaimFromList(claim);
+                break;
             default:
                 throw new RuntimeException("Не распознан тип заявки... (INTO switch/case");
         }

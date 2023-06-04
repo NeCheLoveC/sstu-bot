@@ -10,9 +10,9 @@ import java.util.Objects;
 @Embeddable
 public class PrimaryKey implements Serializable
 {
-    @Column(name = "user_ida")
+    @Column(name = "user_id")
     protected Long userId;
-    @Column(name = "direction_ida")
+    @Column(name = "direction_id")
     protected Long directionId;
     @Enumerated(value = EnumType.STRING)
     @Column(name = "claim_type")

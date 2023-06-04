@@ -22,8 +22,7 @@ public class MetaInfoAboutUserIntoDirection
     int AGREEMENT_ID = DOCUMENT_TYPE_ID + 1;
     int CONDITION_ID; //Состояние - подано/отозвано/зачислен
     int CHAMPION_ID;
-    @OneToOne(optional = false
-    )
+    @OneToOne(optional = false)
     @JoinColumn(name = "direction_id", unique = true)
     protected Direction direction;
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE})

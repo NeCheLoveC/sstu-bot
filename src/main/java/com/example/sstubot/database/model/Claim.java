@@ -7,19 +7,21 @@ import org.hibernate.Hibernate;
 import java.util.*;
 
 @Entity
-@Table(name = "Claim")
+@Table(name = "claim")
 public class Claim implements Comparable<Claim>
 {
     @EmbeddedId
     protected PrimaryKey id = new PrimaryKey();
     @ManyToOne
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
+    @MapsId("userId")
     protected User user;
     @ManyToOne
-    @JoinColumn(name = "direction_id", insertable = false, updatable = false)
+    @JoinColumn(name = "direction_id")
+    @MapsId("directionId")
     protected Direction direction;
     @Enumerated(value = EnumType.STRING)
-    @Column(name = "claim_type", insertable = false, updatable = false)
+    @Column(name = "claim_type", insertable = false,updatable = false)
     protected ClaimType claimType;
     @Column(name = "countScore_for_individual_achievements")
     protected int countScoreForIndividualAchievements = 0;
@@ -166,7 +168,7 @@ public class Claim implements Comparable<Claim>
 
     @Override
     public int compareTo(Claim o) {
-        if(o.direction.equals(this.direction))
+        if(!o.direction.equals(this.direction))
             throw new RuntimeException("Claim могут быть сранимы только одинаковых типов, онс ссылаются на разные Direction"
                     + "\n" + this.direction.urlToListOfClaims
                     + "\n" + o.direction.urlToListOfClaims
@@ -175,7 +177,7 @@ public class Claim implements Comparable<Claim>
         if(o.isBudget() != this.isBudget())
             throw new RuntimeException("Claim не могу быть сравнимы. Один находится на бюджетной, а второй - на коммерсечской основе");
          */
-        if(this.getClaimType() != o.getClaimType())
+        if(!this.getClaimType().equals(o.getClaimType()))
             throw new RuntimeException("Claim могут быть сранимы только одинаковых типов");
         if(this.isChampion() != o.isChampion())
         {

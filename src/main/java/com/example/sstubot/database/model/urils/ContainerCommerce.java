@@ -12,7 +12,7 @@ public class ContainerCommerce
     protected List<Claim> claims = new LinkedList<>();
 
     protected ClaimType claimType;
-    protected int minScoreForAdd = 0;
+    //protected int minScoreForAdd = 0;
     public ContainerCommerce()
     {
         this.claimType = ClaimType.COMMERCE_GENERAL_LIST;
@@ -62,5 +62,14 @@ public class ContainerCommerce
     private boolean canAddClaim(Claim claim)
     {
         return true;
+    }
+
+
+    public void removeClaimFromList(Claim claim) {
+        if(claim == null)
+            throw new NullPointerException("Claim не может быть равен null");
+        if(!claim.getClaimType().equals(claimType))
+            throw new RuntimeException("Данной заявки нет в списке");
+        claims.remove(claim);
     }
 }

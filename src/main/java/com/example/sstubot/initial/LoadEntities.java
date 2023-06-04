@@ -4,6 +4,8 @@ import com.example.sstubot.database.model.Claim;
 import com.example.sstubot.database.model.Direction;
 import com.example.sstubot.database.model.User;
 import com.example.sstubot.database.model.urils.ClaimType;
+import com.example.sstubot.database.model.urils.ContainerQuotaClaims;
+import com.example.sstubot.database.service.ClaimService;
 import com.example.sstubot.database.service.DirectionService;
 import com.example.sstubot.database.service.InstituteService;
 import com.example.sstubot.database.service.UserService;
@@ -22,6 +24,8 @@ public class LoadEntities {
     protected InstituteService instituteService;
     protected DirectionService directionService;
     protected UserService userSerivce;
+    @Autowired
+    protected ClaimService claimService;
 
     @Autowired
     public LoadEntities(@Qualifier("institutesLoad") InstitutesLoad institutesLoad, DirectionLoad directionLoad, LoadManager loadManager, InstituteService instituteService, DirectionService directionService, UserService userSerivce) {
@@ -42,19 +46,26 @@ public class LoadEntities {
             directionLoad.load(); // Загрузка институтов с направлениями
         Map<String, User> userMap = this.loadManager.loadClaims();
         Collection<User> userCollection = sortClaimsIntoUsers(userMap.values());
+        List<Direction> directions = directionService.getAllDirection();
+        for(Direction d : directions)
+        {
+            d.initContainers();
+        }
         //Зачисление в Direction
-        clearLastTry(userSerivce);
-        enrollUser(userCollection);
+        //clearLastTry(userSerivce);
+        //enrollUser(userCollection);
         System.out.println("test");
         for(User u : userCollection)
         {
             userSerivce.save(u);
         }
 
+
         //Загрузка юзеров
         Collection<User> userCollection2 = userCollection;
         System.out.println("test");
         enrollmentUserIntoDirectionsFirstStage(userCollection2);
+        //List<Direction> directions = directionService.getAllDirection();
         enrollmentUserIntoDirectionsSecondStage(userCollection2);
         System.out.println("test");
     }
@@ -80,7 +91,7 @@ public class LoadEntities {
     }
     protected void enrollmentUserIntoDirectionsFirstStage(Collection<User> users)
     {
-        int count = 0;
+
         Collection<User> allUsers = users;
         //List<User> userListWithOriginal = new LinkedList<>(users.stream().filter(x -> x.isOriginalDocuments()).toList());
         //Set<Direction> directionSet = directionLoad
@@ -89,13 +100,17 @@ public class LoadEntities {
         {
             // TODO: 18.05.2023 Нужно проходиться по юзерам и обновлять список
             ListIterator<User> iter = users.stream().toList().listIterator();
+            int count = 0;
             while(iter.hasNext())
             {
                 User user = iter.next();
-                if(user.getWinClaim() != null || !user.isOriginalDocuments())
+                if(!user.isOriginalDocuments())
                     continue;
+                Claim currentWinClaimUser = user.getWinClaim();
                 for(Claim claim : user.getSortedClaims())
                 {
+                    if(claim.equals(currentWinClaimUser))
+                        break;
                     //Только квоты на этом плане + БВИ
                     if(!validateClaimTypeForFirstStage(claim))
                     {
@@ -122,18 +137,12 @@ public class LoadEntities {
                             if(canAdd = direction.canAddIntoGeneralList(claim))
                                 claim = direction.addClaimIntoList(claim);
                             break;
-                        case COMMERCE_GENERAL_LIST:
-                            /*
-                            if(canAdd = direction.canAddIntoCommerce(claim))
-                                claim = direction.addClaimIntoList(claim);
-
-                             */
-                            break;
                         default:
                             throw new RuntimeException("Не распознан тип заявки... (INTO switch/case");
                     }
                     if(canAdd)
                     {
+                        direction.refreshGeneralList();
                         count++;
                     }
 
@@ -157,7 +166,7 @@ public class LoadEntities {
     {
         int count = 0;
         Collection<User> allUsers = users;
-        List<User> userListWithOriginal = new LinkedList<>(users.stream().filter(x -> x.isOriginalDocuments()).toList());
+        List<User> userListWithOriginal = new LinkedList<>(users.stream().filter(x -> x.getWinClaim() == null).toList());
         //Set<Direction> directionSet = directionLoad
         //Нужно получить всех пользователей с оригиналами!
         while(true)
@@ -167,10 +176,13 @@ public class LoadEntities {
             while(iter.hasNext())
             {
                 User user = iter.next();
-                if(user.getWinClaim() != null || !user.isOriginalDocuments())
+                if(!user.isOriginalDocuments())
                     continue;
+                Claim currentWinClaimUser = user.getWinClaim();
                 for(Claim claim : user.getSortedClaims())
                 {
+                    if(claim.equals(currentWinClaimUser))
+                        break;
                     //Только квоты на этом плане + БВИ
                     if(!validateClaimTypeForSecondStage(claim))
                     {
@@ -182,26 +194,16 @@ public class LoadEntities {
                     //if(direction.)
                     switch (claim.getClaimType())
                     {
-                        case BUDGET_SPECIAL_QUOTA:
-                            if(canAdd = direction.canAddIntoSpecial(claim))
-                                claim = direction.addClaimIntoList(claim);
-                            break;
-                        case BUDGET_TARGET_QUOTA:
-                            if(canAdd = direction.canAddIntoTarget(claim))
-                                claim = direction.addClaimIntoList(claim);
-                            break;
-                        case BUDGET_UNUSUAL_QUOTA:
-                            if(canAdd = direction.canAddIntoUnusual(claim))
-                                claim = direction.addClaimIntoList(claim);
-                            break;
                         case BUDGET_GENERAL_LIST:
                             if(canAdd = direction.canAddIntoGeneralList(claim))
                                 claim = direction.addClaimIntoList(claim);
                             break;
+                            /*
                         case COMMERCE_GENERAL_LIST:
                             if(canAdd = direction.canAddIntoCommerce(claim))
                                 claim = direction.addClaimIntoList(claim);
                             break;
+                             */
                         default:
                             throw new RuntimeException("Не распознан тип заявки... (INTO switch/case");
                     }

@@ -2,41 +2,54 @@ package com.example.sstubot.database.model.urils;
 
 import com.example.sstubot.database.model.Claim;
 import com.example.sstubot.database.model.User;
-import jakarta.annotation.Nullable;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
 
-public class ContainerClaims
+public class GeneralListContainer implements ClaimContainer
 {
-    protected List<Claim> claims = new LinkedList<>();
-    protected int  maxSize;
-    //protected int currentSize;
-    protected ClaimType claimType;
-    protected int minScoreForAdd = 0;
-    public ContainerClaims(int maxSize, ClaimType claimType)
+    private ClaimType claimType = ClaimType.BUDGET_GENERAL_LIST;
+    private List<Claim> claims = new LinkedList<>();
+    private GetReservedQuots reservedQuots;
+    private int minScoreForAdd = 0;
+    private int maxSize = 0;
+    public GeneralListContainer(GetReservedQuots reservedQuots, int maxSize)
     {
+        this.reservedQuots = reservedQuots;
         this.maxSize = maxSize;
-        this.claimType = claimType;
     }
 
-    //true - если добавить в список можно
-    //false - если добавить нельзя т.к не хватает проходных балов или мест
-    @Nullable
-    public Claim addClaimIntoContainer(Claim claim)
+    @Override
+    public boolean canAddClaim(Claim claim)
     {
+        // TODO: 04.06.2023 ВОТ тут нужно исправить
         if(!claim.getClaimType().equals(claimType))
             throw new RuntimeException("Данный контейнер не подходит для данного типы заявки");
-        if(canAddClaim(claim))
-        {
-            return addClaim(claim);
-        }
+        if(getRealCurrentMaxSize() == 0)
+            return false;
+        if(getRealCurrentMaxSize() > claims.size())
+            return true;
+        //Если самый "слабый" элемент меньше чем текущий
+        Claim lastElement = getLastElementIfExist();
+        int resultOfCompared = claim.compareTo(lastElement);
+        if(resultOfCompared > 0)
+            return true;
+        else if(resultOfCompared < 0)
+            return false;
         else
         {
-            return null;
+            //Не очень корректно
+            System.out.println("У пользоватлей равенство баллов " + claim.getUser().getUniqueCode() + " и " + lastElement.getUser().getUniqueCode());
+            return false;
         }
     }
 
-    //Перед вставкой обязательно проверка на canAddClaim(Claim)
+    @Override
+    public Claim addClaimIntoContainer(Claim claim) {
+        return addClaim(claim);
+    }
+
     private Claim addClaim(Claim claim)
     {
         /*
@@ -46,28 +59,37 @@ public class ContainerClaims
             - если нет заявок - пользователь добавляется в очередь - return null
          */
         Claim removedClaim = null;
-        if(maxSize > currentSize() && currentSize() == 0)
+        if((getRealCurrentMaxSize() > currentSize()) && (currentSize() == 0))
         {
             claims.add(claim);
             User user = claim.getUser();
             user.setWinClaim(claim);
         }
-        else if(maxSize > currentSize())
+        else if(getRealCurrentMaxSize() > currentSize())
         {
             ListIterator<Claim> iterator = claims.listIterator();
             int i = 0;
             Claim c;
+            boolean isAdded = false;
             while (iterator.hasNext())
             {
                 c = iterator.next();
                 int compareResult = claim.compareTo(c);
                 if(compareResult > 0)
                 {
+                    isAdded = true;
                     break;
                 }
                 i++;
             }
-            claims.add(i,claim);
+            if(!isAdded)
+            {
+                claims.add(claim);
+            }
+            else
+            {
+                claims.add(i,claim);
+            }
             User user = claim.getUser();
             user.setWinClaim(claim);
         }
@@ -97,36 +119,17 @@ public class ContainerClaims
         return removedClaim;
     }
 
+    private int currentSize()
+    {
+        return claims.size();
+    }
+
     private void refreshMinScore()
     {
         if(!claims.isEmpty())
         {
             this.minScoreForAdd = this.claims.get(this.claims.size() - 1).getSummaryOfScore();
         }
-    }
-
-    public boolean canAddClaim(Claim claim)
-    {
-        if(!claim.getClaimType().equals(claimType))
-            throw new RuntimeException("Данный контейнер не подходит для данного типы заявки");
-        if(maxSize == 0)
-            return false;
-        if(maxSize > claims.size())
-            return true;
-        //Если самый "слабый" элемент меньше чем текущий
-        Claim lastElement = getLastElementIfExist();
-        int resultOfCompared = claim.compareTo(lastElement);
-        if(resultOfCompared > 0)
-            return true;
-        else if(resultOfCompared < 0)
-            return false;
-        else
-        {
-            //Не очень корректно
-            System.out.println("У пользоватлей равенство баллов " + claim.getUser().getUniqueCode() + " и " + lastElement.getUser().getUniqueCode());
-            return false;
-        }
-
     }
 
     private Claim getLastElementIfExist()
@@ -138,8 +141,31 @@ public class ContainerClaims
         return null;
     }
 
-    public int currentSize()
+    public void refreshClaims()
     {
-        return claims.size();
+        while(getRealCurrentMaxSize() < currentSize())
+        {
+            //Нужно исключить все "лишние" заявки
+            if(!claims.isEmpty())
+            {
+                claims.get(claims.size() - 1).getUser().setWinClaim(null);
+                claims.remove(claims.size() - 1);
+            }
+        }
+    }
+
+    @Override
+    public void removeClaimFromList(Claim claim) {
+        if(claim == null)
+            throw new NullPointerException("Claim не может быть равен null");
+        if(!claim.getClaimType().equals(claimType))
+            throw new RuntimeException("Данной заявки нет в списке");
+        claims.remove(claim);
+        refreshMinScore();
+    }
+
+    private int getRealCurrentMaxSize()
+    {
+        return (maxSize - this.reservedQuots.getReserved());
     }
 }

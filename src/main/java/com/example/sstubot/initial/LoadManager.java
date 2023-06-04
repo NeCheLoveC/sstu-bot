@@ -176,7 +176,7 @@ public class LoadManager
 
             String statusOfClaim = rawDataClaim.get(currentDirection.getMetaInfo().CONDITION_ID).text();
             //String typeOfDocument = rawDataClaim.get(currentDirection.getMetaInfo().CONDITION_ID).text();
-            Pattern pattern = Pattern.compile("(Подано)|(Зачислен)",Pattern.CASE_INSENSITIVE);
+            Pattern pattern = Pattern.compile("(.*Подано.*)|(.*Зачислен.*)",Pattern.CASE_INSENSITIVE);
             Matcher matcher = pattern.matcher(statusOfClaim);
             boolean isActualClaim = matcher.matches();
             if(!isActualClaim)
@@ -217,7 +217,7 @@ public class LoadManager
             Pattern pattern = Pattern.compile("(.*Подано.*)|(.*Зачислен.*)",Pattern.CASE_INSENSITIVE);
             Matcher matcher = pattern.matcher(statusOfClaim);
             boolean isActualClaim = matcher.matches();
-            if(!isActualClaim)
+            if(!isActualClaim )
                 return;
             formedClaimAndAddIntoInsitute(currentDirection, rawDataClaim, claimType, user);
         }
@@ -246,7 +246,6 @@ public class LoadManager
             int points = 0;
             Score score = new Score();
             score.setExam(exams.get(id));
-            score.setScore(points);
             score.setClaim(claim);
             scores.add(score);
             try
@@ -260,6 +259,7 @@ public class LoadManager
                 );
                 score.setAbsence(true);
             }
+            score.setScore(points);
             id++;
         }
         claim.setScoreList(scores);
@@ -269,7 +269,7 @@ public class LoadManager
         int sumScore = 0;
         try
         {
-            sumScore = Integer.valueOf(sumScore);
+            sumScore = Integer.valueOf(sumScoreRawStr);
 
         }
         catch (NumberFormatException err)

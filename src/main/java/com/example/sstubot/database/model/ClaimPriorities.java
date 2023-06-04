@@ -12,8 +12,9 @@ public class ClaimPriorities
     @JoinColumn(name = "direction_id")
     protected Direction direction;
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id",insertable = false,updatable = false)
     protected User user;
+    @Column(name = "is_budget")
     protected boolean isBudget;
     protected ClaimPriorities(){}
 
@@ -22,6 +23,14 @@ public class ClaimPriorities
             throw new RuntimeException("Конструктор имеет null аргументы (ClaimPriorities)");
         this.direction = direction;
         this.isBudget = isBudget;
+        this.user = user;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
         this.user = user;
     }
 

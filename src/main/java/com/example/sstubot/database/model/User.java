@@ -9,7 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Entity
-@Table(indexes = {@Index(unique = true, columnList = "unique_code")}, name = "'user'")
+@Table(indexes = {@Index(unique = true, columnList = "unique_code")}, name = "userrrr")
 public class User
 {
     @Id
@@ -19,13 +19,14 @@ public class User
     protected String uniqueCode;
     @Column(name = "original_documents")
     protected boolean originalDocuments = false;
-    @OneToMany(mappedBy = "user", cascade = {CascadeType.REMOVE})
-    protected ArrayList<Claim> claims = new ArrayList();
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.PERSIST})
+    protected List<Claim> claims = new ArrayList();
     @Transient
     protected List<Claim> sortedClaims = new LinkedList<>();
-    @OneToMany(cascade = {CascadeType.PERSIST,CascadeType.REMOVE})
+
+    @OneToMany(cascade = {CascadeType.REMOVE,CascadeType.PERSIST})
     @JoinColumn(name = "user_id")
-    @OrderColumn
+    @OrderColumn(name = "claim_position", nullable = false)
     protected List<ClaimPriorities> priorities = new LinkedList<>();
 
     /*
@@ -48,11 +49,11 @@ public class User
 
     public User(){};
 
-    public ArrayList<Claim> getClaims() {
+    public List<Claim> getClaims() {
         return claims;
     }
 
-    public void setClaims(ArrayList<Claim> claims) {
+    public void setClaims(List<Claim> claims) {
         this.claims = claims;
     }
 
@@ -79,6 +80,7 @@ public class User
     public void addPriorities(ClaimPriorities priorities)
     {
         this.priorities.add(priorities);
+        priorities.setUser(this);
     }
 
     public void addClaim(Claim claim)
@@ -99,6 +101,7 @@ public class User
     }
 
     public void setWinClaim(Claim winClaim) {
+        /*
         if(winClaim == null)
         {
             if(this.winClaim != null)
@@ -109,9 +112,40 @@ public class User
         {
             if(!winClaim.getUser().equals(this))
                 throw new RuntimeException("Попытка добавления winClaim пользователю, не владеющего данной заявкой");
+            if(this.winClaim != null)
+                this.winClaim.setWin(false);
             this.winClaim = winClaim;
             this.winClaim.setWin(true);
         }
+         */
+        if(this.winClaim != null)
+        {
+            this.winClaim.setWin(false);
+            this.winClaim.getDirection().deleteClaim(this.winClaim);
+        }
+        this.winClaim = winClaim;
+        if(this.winClaim != null)
+            this.winClaim.setWin(true);
+        /*
+        if(this.winClaim == null)
+        {
+            if(winClaim != null)
+            {
+                winClaim.setWin(true);
+            }
+            this.winClaim = winClaim;
+        }
+        else
+        {
+            this.winClaim.setWin(false);
+            winClaim.getDirection().deleteClaim(this.winClaim);
+            if(winClaim != null)
+            {
+                winClaim.setWin(true);
+            }
+            this.winClaim = winClaim;
+        }
+         */
     }
 
     public void sortClaim()
