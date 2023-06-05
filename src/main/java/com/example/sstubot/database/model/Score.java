@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table
-public class Score
+public class Score implements Comparable<Score>
 {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -60,5 +60,13 @@ public class Score
     public void setAbsence(boolean absence) {
         this.absence = absence;
         claim.setAbsence(absence);
+    }
+
+    @Override
+    public int compareTo(Score o)
+    {
+        if(!exam.name.equals(o.getExam().name))
+            throw new RuntimeException("Ошибка: попытка сравнения двух разных экзаменов");
+        return this.score - o.score;
     }
 }

@@ -26,7 +26,7 @@ public class User
 
     @OneToMany(cascade = {CascadeType.REMOVE,CascadeType.PERSIST})
     @JoinColumn(name = "user_id")
-    @OrderColumn(name = "claim_position", nullable = false)
+    @OrderColumn(name = "claim_position")
     protected List<ClaimPriorities> priorities = new LinkedList<>();
 
     /*

@@ -186,6 +186,21 @@ public class Claim implements Comparable<Claim>
             else
                 return -1;
         }
-        return this.getSummaryOfScore() - o.getSummaryOfScore();
+        int divOfScore = this.getSummaryOfScore() - o.getSummaryOfScore();;
+        if(divOfScore != 0)
+        {
+            return divOfScore;
+        }
+        else
+        {
+            //Суммарное кол-во баллов одинаково, тогда стоит сравнить баллы за экзамены по приоритету экзаменов
+            for(int i = 0;i < scoreList.size();i++)
+            {
+                int divExam = this.scoreList.get(i).compareTo(o.scoreList.get(i));
+                if(divExam != 0)
+                    return divExam;
+            }
+            return 0;
+        }
     }
 }
