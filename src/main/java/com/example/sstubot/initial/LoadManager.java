@@ -4,6 +4,7 @@ import com.example.sstubot.database.model.*;
 import com.example.sstubot.database.model.urils.ClaimType;
 import com.example.sstubot.database.model.urils.EducationType;
 import com.example.sstubot.database.service.DirectionService;
+import com.example.sstubot.database.service.UserService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -23,6 +24,8 @@ import java.util.regex.Pattern;
 @Scope(value = "prototype")
 public class LoadManager
 {
+    @Autowired
+    private UserService userService;
     private DirectionService directionService;
     private Map<String, User> userMap = new HashMap<>();
     final String URL_DOMAIN_PAGE = "https://abitur.sstu.ru";
@@ -34,7 +37,7 @@ public class LoadManager
     @Transactional
     public Map<String, User> loadClaims()
     {
-        List<Direction> directionList = new LinkedList<>();
+        List<Direction> directionList;
         try
         {
             directionList = directionService.getAllDirection();
@@ -169,7 +172,7 @@ public class LoadManager
             return;
         }
         String userCode = rawDataClaim.get(MetaInfoAboutUserIntoDirection.USER_CODE_ID).ownText().trim();
-
+        User user = null;
         //User-id найден впервые -> создаем юзера, заявку и список приоретета
         if(!this.userMap.containsKey(userCode))
         {
@@ -183,7 +186,7 @@ public class LoadManager
                 return;
             String typeDocument = rawDataClaim.get(currentDirection.getMetaInfo().DOCUMENT_TYPE_ID).ownText().trim();
             boolean originalDoc = typeDocument.matches(".*Оригинал.*");
-            User user = new User();
+            user = new User();
             user.setUniqueCode(userCode);
             user.setOriginalDocuments(originalDoc);
             Elements rawPriorities = rawDataClaim.get(MetaInfoAboutUserIntoDirection.USER_CODE_ID).getElementsByTag("a");
@@ -211,7 +214,7 @@ public class LoadManager
         }
         else
         {
-            User user = userMap.get(userCode);
+            user = userMap.get(userCode);
             String statusOfClaim = rawDataClaim.get(currentDirection.getMetaInfo().CONDITION_ID).ownText().trim();
             System.out.println("user :" + user.getUniqueCode() + " url: " + currentDirection.getUrlToListOfClaims());
             Pattern pattern = Pattern.compile("(.*Подано.*)|(.*Зачислен.*)",Pattern.CASE_INSENSITIVE);
@@ -221,6 +224,8 @@ public class LoadManager
                 return;
             formedClaimAndAddIntoInsitute(currentDirection, rawDataClaim, claimType, user);
         }
+
+
     }
     private EducationType defineEduTypeByString(String str)
     {

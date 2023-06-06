@@ -50,4 +50,8 @@ public class UserService
         for(User user : oldUsers)
             userRepository.delete(user);
     }
+    public List<User> getAllUsers()
+    {
+        return userRepository.findAll();
+    }
 }

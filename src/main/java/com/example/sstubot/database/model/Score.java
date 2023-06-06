@@ -14,7 +14,11 @@ public class Score implements Comparable<Score>
     protected Integer score = null;
 
     @ManyToOne
-    @JoinColumns(value = {@JoinColumn(name = "user_id",referencedColumnName = "user_id"), @JoinColumn(name = "direction_id", referencedColumnName = "direction_id")})
+    @JoinColumns(value = {
+                    @JoinColumn(name = "user_id",referencedColumnName = "user_id"),
+                    @JoinColumn(name = "direction_id", referencedColumnName = "direction_id"),
+                    @JoinColumn(name = "claim_type", referencedColumnName = "claim_type")
+            })
     protected Claim claim;
 
     @ManyToOne(cascade = CascadeType.REMOVE)

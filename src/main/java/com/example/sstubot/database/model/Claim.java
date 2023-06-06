@@ -13,16 +13,14 @@ public class Claim implements Comparable<Claim>
     @EmbeddedId
     protected PrimaryKey id = new PrimaryKey();
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    @MapsId("userId")
+    //@JoinColumn(name = "user_id")
+    @MapsId(value = "userId")
     protected User user;
     @ManyToOne
-    @JoinColumn(name = "direction_id")
-    @MapsId("directionId")
+    //@JoinColumn(name = "direction_id")
+    @MapsId(value = "directionId")
     protected Direction direction;
-    @Enumerated(value = EnumType.STRING)
-    @Column(name = "claim_type", insertable = false,updatable = false)
-    protected ClaimType claimType;
+
     @Column(name = "countScore_for_individual_achievements")
     protected int countScoreForIndividualAchievements = 0;
 
@@ -38,20 +36,22 @@ public class Claim implements Comparable<Claim>
     protected boolean isWin = false;
     protected Claim(){}
     public Claim(User user, Direction direction, ClaimType claimType) {
-        //if(user == null || direction == null )
-            //throw new RuntimeException("При создании Claim были переданы user = null или department = null");
-        //if(user.getId() == null || direction.getId() == null)
-            //throw new RuntimeException("Для создания заявки user и department уже должны быть ХРАНИМЫМИ");
-        this.id.userId = user.getId();
-        this.id.directionId = direction.getId();
-        this.id.claimType = claimType;
-
-        this.user = user;;
+        //validateKey(user,direction);
+        this.id = new PrimaryKey(user.id,direction.id,claimType);
+        this.user = user;
         this.direction = direction;
-        this.claimType = claimType;
+        //.claimType = claimType;
 
         user.addClaim(this);
         direction.addClaim(this);
+    }
+
+    private void validateKey(User user, Direction direction)
+    {
+        if(user.getId() == null)
+            throw new RuntimeException("User не имеет id");
+        if(direction.getId() == null)
+            throw new RuntimeException("Direction не имеет id");
     }
     public static Claim createNewClaim(User user, Direction direction, ClaimType claimType)
     {
@@ -107,7 +107,7 @@ public class Claim implements Comparable<Claim>
     }
 
     public ClaimType getClaimType() {
-        return claimType;
+        return this.id.claimType;
     }
 
     public void setUser(User user) {
@@ -116,10 +116,6 @@ public class Claim implements Comparable<Claim>
 
     public void setDirection(Direction direction) {
         this.direction = direction;
-    }
-
-    public void setClaimType(ClaimType claimType) {
-        this.claimType = claimType;
     }
 
 
@@ -139,7 +135,7 @@ public class Claim implements Comparable<Claim>
 
     public boolean isBudget()
     {
-        return claimType == ClaimType.COMMERCE_GENERAL_LIST ? false : true;
+        return id.claimType == ClaimType.COMMERCE_GENERAL_LIST ? false : true;
     }
 
     public boolean isAbsence() {

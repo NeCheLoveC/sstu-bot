@@ -183,7 +183,7 @@ public class User
         {
             for(Claim c : claims)
             {
-                if(similar(cp,c) && c.claimType.equals(ClaimType.BUDGET_TARGET_QUOTA))
+                if(similar(cp,c) && c.id.claimType.equals(ClaimType.BUDGET_TARGET_QUOTA))
                 {
                     claimsIntoPriorityStage.add(c);
                 }
@@ -195,7 +195,7 @@ public class User
         {
             for(Claim c : claims)
             {
-                if(similar(cp,c) && c.claimType.equals(ClaimType.BUDGET_GENERAL_LIST) && c.isChampion())
+                if(similar(cp,c) && c.id.claimType.equals(ClaimType.BUDGET_GENERAL_LIST) && c.isChampion())
                 {
                     claimsIntoPriorityStage.add(c);
                 }
@@ -207,7 +207,7 @@ public class User
         {
             for(Claim c : claims)
             {
-                if(similar(cp,c) && c.claimType.equals(ClaimType.BUDGET_SPECIAL_QUOTA))
+                if(similar(cp,c) && c.id.claimType.equals(ClaimType.BUDGET_SPECIAL_QUOTA))
                 {
                     claimsIntoPriorityStage.add(c);
                 }
@@ -219,7 +219,7 @@ public class User
         {
             for(Claim c : claims)
             {
-                if(similar(cp,c) && c.claimType.equals(ClaimType.BUDGET_UNUSUAL_QUOTA))
+                if(similar(cp,c) && c.id.claimType.equals(ClaimType.BUDGET_UNUSUAL_QUOTA))
                 {
                     claimsIntoPriorityStage.add(c);
                 }

@@ -1,5 +1,6 @@
 package com.example.sstubot;
 
+import com.example.sstubot.database.model.urils.ParserManager;
 import com.example.sstubot.initial.InstitutesLoad;
 import com.example.sstubot.initial.LoadEntities;
 import org.springframework.boot.CommandLineRunner;
@@ -15,10 +16,14 @@ public class SstuBotApplication {
     }
 
     @Bean
-    CommandLineRunner run(LoadEntities loadEntities)
+    CommandLineRunner run(LoadEntities loadEntities, ParserManager parserManager)
     {
         return args -> {
-            loadEntities.load();
+            while(parserManager.isParserWork())
+            {
+                loadEntities.load();
+                wait(parserManager.getIntervalBetweenParsingInSec());
+            }
         };
     }
 

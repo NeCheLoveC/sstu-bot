@@ -33,7 +33,7 @@ public class DirectionLoad
     public static String urlListOfDirectionsZAOCHNAY = "https://abitur.sstu.ru/vpo/level/2022/b/z";
     public static String getUrlListOfDirectionsOCHNO_ZAOCHNAY = "https://abitur.sstu.ru/vpo/level/2022/b/oz";
     protected final String domainUrl = "https://abitur.sstu.ru";
-    HashMap<String,Institute> institutes = new HashMap<>();
+    //HashMap<String,Institute> institutes = new HashMap<>();
     @Autowired
     public DirectionLoad(DirectionService directionService, InstituteService instituteService, ExamService examService)
     {

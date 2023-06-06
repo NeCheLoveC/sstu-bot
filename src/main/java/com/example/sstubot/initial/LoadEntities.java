@@ -51,22 +51,18 @@ public class LoadEntities {
         {
             d.initContainers();
         }
-        //Зачисление в Direction
-        //clearLastTry(userSerivce);
-        //enrollUser(userCollection);
-        System.out.println("test");
+        Collection<User> userCollection2 = userCollection;
+        enrollmentUserIntoDirectionsFirstStage(userCollection2);
+        enrollmentUserIntoDirectionsSecondStage(userCollection2);
+
+
         for(User u : userCollection)
         {
+
             userSerivce.save(u);
         }
 
 
-        //Загрузка юзеров
-        Collection<User> userCollection2 = userCollection;
-        System.out.println("test");
-        enrollmentUserIntoDirectionsFirstStage(userCollection2);
-        //List<Direction> directions = directionService.getAllDirection();
-        enrollmentUserIntoDirectionsSecondStage(userCollection2);
         System.out.println("test");
     }
     @Transactional
