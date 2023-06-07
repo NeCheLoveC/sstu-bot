@@ -22,7 +22,17 @@ public class SstuBotApplication {
             while(parserManager.isParserWork())
             {
                 loadEntities.load();
-                wait(parserManager.getIntervalBetweenParsingInSec());
+                System.out.println("Ожидание потока");
+                System.out.println("Ожидание потока");
+                System.out.println("Ожидание потока");
+                System.out.println("Ожидание потока");
+                System.out.println("Ожидание потока");
+                System.out.println("Ожидание потока");
+                System.out.println("Ожидание потока");
+                System.out.println("Ожидание потока");
+                System.out.println("Ожидание потока");
+                System.out.println("Ожидание потока");
+                System.out.println("Ожидание потока");
             }
         };
     }

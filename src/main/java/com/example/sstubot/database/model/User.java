@@ -4,7 +4,6 @@ import com.example.sstubot.database.model.urils.ClaimType;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -40,10 +39,15 @@ public class User
                     @JoinColumn(name = "claim_type", referencedColumnName = "claim_type"),
             }
     )
-     */
+    */
     // TODO: 31.05.2023 РЕАЛИЗОВАТЬ ссылку на составной первичный ключ
 
-    @Transient
+    @ManyToOne
+    @JoinColumns({
+            @JoinColumn(name = "win_claim_user_id", referencedColumnName = "user_id"),
+            @JoinColumn(name = "win_claim_department_id", referencedColumnName = "direction_id"),
+            @JoinColumn(name = "win_claim_type", referencedColumnName = "claim_type")
+    })
     protected Claim winClaim;
 
 
@@ -101,23 +105,6 @@ public class User
     }
 
     public void setWinClaim(Claim winClaim) {
-        /*
-        if(winClaim == null)
-        {
-            if(this.winClaim != null)
-                this.winClaim.setWin(false);
-            this.winClaim = null;
-        }
-        else
-        {
-            if(!winClaim.getUser().equals(this))
-                throw new RuntimeException("Попытка добавления winClaim пользователю, не владеющего данной заявкой");
-            if(this.winClaim != null)
-                this.winClaim.setWin(false);
-            this.winClaim = winClaim;
-            this.winClaim.setWin(true);
-        }
-         */
         if(this.winClaim != null)
         {
             this.winClaim.setWin(false);
@@ -126,26 +113,6 @@ public class User
         this.winClaim = winClaim;
         if(this.winClaim != null)
             this.winClaim.setWin(true);
-        /*
-        if(this.winClaim == null)
-        {
-            if(winClaim != null)
-            {
-                winClaim.setWin(true);
-            }
-            this.winClaim = winClaim;
-        }
-        else
-        {
-            this.winClaim.setWin(false);
-            winClaim.getDirection().deleteClaim(this.winClaim);
-            if(winClaim != null)
-            {
-                winClaim.setWin(true);
-            }
-            this.winClaim = winClaim;
-        }
-         */
     }
 
     public void sortClaim()
@@ -252,16 +219,8 @@ public class User
         return true;
     }
 
-
-
     public List<Claim> getSortedClaims() {
         return sortedClaims;
     }
-    /*
-    public void addClaim(Collection<Claim> claim)
-    {
-        for(Claim obj : claim)
-            this.claims.add(obj);
-    }
-     */
+
 }

@@ -24,31 +24,28 @@ import java.util.regex.Pattern;
 @Scope(value = "prototype")
 public class LoadManager
 {
-    @Autowired
-    private UserService userService;
     private DirectionService directionService;
-    private Map<String, User> userMap = new HashMap<>();
+    private Map<String, User> userMap;
     final String URL_DOMAIN_PAGE = "https://abitur.sstu.ru";
+    Map<String, Direction> directionHashMap;
     @Autowired
     public LoadManager(DirectionService directionService)
     {
         this.directionService = directionService;
     }
     @Transactional
-    public Map<String, User> loadClaims()
-    {
-        List<Direction> directionList;
+    public Map<String, User> loadClaims(Map<String, Direction> directionHashMap, List<Direction> directions) throws IOException {
+        this.userMap = new HashMap<>();
+        this.directionHashMap = directionHashMap;
+        List<Direction> directionList = directions;
         try
         {
-            directionList = directionService.getAllDirection();
             loadWrapper(directionList);
         }
-        catch (Exception err)
+        catch (IOException err)
         {
-            throw new RuntimeException(err);
-            //System.out.println(err.getStackTrace());
+            throw err;
         }
-        List<Direction> d = directionList;
         return this.userMap;
     }
 
@@ -176,7 +173,6 @@ public class LoadManager
         //User-id найден впервые -> создаем юзера, заявку и список приоретета
         if(!this.userMap.containsKey(userCode))
         {
-
             String statusOfClaim = rawDataClaim.get(currentDirection.getMetaInfo().CONDITION_ID).text();
             //String typeOfDocument = rawDataClaim.get(currentDirection.getMetaInfo().CONDITION_ID).text();
             Pattern pattern = Pattern.compile("(.*Подано.*)|(.*Зачислен.*)",Pattern.CASE_INSENSITIVE);
@@ -198,14 +194,7 @@ public class LoadManager
                 EducationType edyType = defineEduTypeByString(infoAboutAnotherClaimIntoTitle);
                 Direction direction;
                 String url = URL_DOMAIN_PAGE + p.attr("href").trim();
-                if(isBudget)
-                {
-                    direction = directionService.getDirectionByBudgetUrl(url);
-                }
-                else
-                {
-                    direction = directionService.getDirectionByCommerceUrl(url);
-                }
+                direction = directionHashMap.get(url);
                 ClaimPriorities priority = new ClaimPriorities(direction,user,isBudget);
                 user.addPriorities(priority);
             }

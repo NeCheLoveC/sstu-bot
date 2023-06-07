@@ -14,11 +14,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.*;
 
 @Component
 public class LoadEntities {
-    protected InstitutesLoad institutesLoad;
     protected DirectionLoad directionLoad;
     protected LoadManager loadManager;
     protected InstituteService instituteService;
@@ -28,42 +28,52 @@ public class LoadEntities {
     protected ClaimService claimService;
 
     @Autowired
-    public LoadEntities(@Qualifier("institutesLoad") InstitutesLoad institutesLoad, DirectionLoad directionLoad, LoadManager loadManager, InstituteService instituteService, DirectionService directionService, UserService userSerivce) {
-        this.institutesLoad = institutesLoad;
+    public LoadEntities(DirectionLoad directionLoad, LoadManager loadManager, InstituteService instituteService, DirectionService directionService, UserService userSerivce) {
         this.directionLoad = directionLoad;
         this.loadManager = loadManager;
         this.instituteService = instituteService;
         this.directionService = directionService;
         this.userSerivce = userSerivce;
-        System.out.println("test");
     }
 
     @Transactional
-    public void load()
+    public void load() throws IOException
     {
-        //HashMap<String, Institute> instituteHashMap =  institutesLoad.load();
         if(instituteService.countInstance() == 0)
             directionLoad.load(); // Загрузка институтов с направлениями
-        Map<String, User> userMap = this.loadManager.loadClaims();
+        List<Direction> directionList = directionService.getAllDirection();
+        Map<String, Direction> directionHashMap = getMapDirectionsFromList(directionList);
+        Map<String, User> userMap = this.loadManager.loadClaims(directionHashMap,directionList);
         Collection<User> userCollection = sortClaimsIntoUsers(userMap.values());
         List<Direction> directions = directionService.getAllDirection();
         for(Direction d : directions)
         {
             d.initContainers();
         }
-        Collection<User> userCollection2 = userCollection;
-        enrollmentUserIntoDirectionsFirstStage(userCollection2);
-        enrollmentUserIntoDirectionsSecondStage(userCollection2);
+        enrollmentUserIntoDirectionsFirstStage(userCollection);
+        enrollmentUserIntoDirectionsSecondStage(userCollection);
+
+
+
+
+
 
 
         for(User u : userCollection)
         {
-
             userSerivce.save(u);
         }
+    }
 
-
-        System.out.println("test");
+    private Map<String, Direction> getMapDirectionsFromList(List<Direction> directions)
+    {
+        Map<String, Direction> directionMap = new HashMap<>();
+        for(Direction d : directions)
+        {
+            directionMap.put(d.getUrlToListOfClaims(),d);
+            directionMap.put(d.getUrlToListOfClaimsCommerce(),d);
+        }
+        return directionMap;
     }
     @Transactional
     protected void clearLastTry(UserService userService)
