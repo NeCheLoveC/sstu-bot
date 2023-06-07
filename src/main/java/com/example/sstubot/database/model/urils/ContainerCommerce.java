@@ -55,7 +55,7 @@ public class ContainerCommerce
             i++;
         }
         claims.add(i,claim);
-        claim.getUser().setWinClaim(claim);
+        claim.getUser().setWinClaim(claim,claims.indexOf(claim));
         //this.minScoreForAdd = claims.get(claims.size() - 1).getSummaryOfScore();
         return removedClaim;
     }

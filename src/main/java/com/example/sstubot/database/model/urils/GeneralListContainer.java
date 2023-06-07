@@ -3,6 +3,7 @@ package com.example.sstubot.database.model.urils;
 import com.example.sstubot.database.model.Claim;
 import com.example.sstubot.database.model.User;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -63,7 +64,7 @@ public class GeneralListContainer implements ClaimContainer
         {
             claims.add(claim);
             User user = claim.getUser();
-            user.setWinClaim(claim);
+            user.setWinClaim(claim,claims.indexOf(claim));
         }
         else if(getRealCurrentMaxSize() > currentSize())
         {
@@ -91,7 +92,7 @@ public class GeneralListContainer implements ClaimContainer
                 claims.add(i,claim);
             }
             User user = claim.getUser();
-            user.setWinClaim(claim);
+            user.setWinClaim(claim,claims.indexOf(claim));
         }
         else
         {
@@ -111,9 +112,9 @@ public class GeneralListContainer implements ClaimContainer
             }
             claims.add(i,claim);
             User user = claim.getUser();
-            user.setWinClaim(claim);
+            user.setWinClaim(claim,claims.indexOf(claim));
             claims.remove(removedClaim);
-            removedClaim.getUser().setWinClaim(null);
+            removedClaim.getUser().setWinClaim(null,0);
         }
         refreshMinScore();
         return removedClaim;
@@ -148,7 +149,7 @@ public class GeneralListContainer implements ClaimContainer
             //Нужно исключить все "лишние" заявки
             if(!claims.isEmpty())
             {
-                claims.get(claims.size() - 1).getUser().setWinClaim(null);
+                claims.get(claims.size() - 1).getUser().setWinClaim(null,0);
                 claims.remove(claims.size() - 1);
             }
         }
@@ -167,5 +168,14 @@ public class GeneralListContainer implements ClaimContainer
     private int getRealCurrentMaxSize()
     {
         return (maxSize - this.reservedQuots.getReserved());
+    }
+
+    public void initWinClaimPosition()
+    {
+        Iterator<Claim> iter = claims.iterator();
+        for(int i = 0; iter.hasNext();i++)
+        {
+            iter.next().setPositionIntoWinList(i);
+        }
     }
 }

@@ -34,6 +34,8 @@ public class Claim implements Comparable<Claim>
     protected int summaryOfScore = 0;
     @Column(name = "is_win")
     protected boolean isWin = false;
+    @Column(name = "position_win_list")
+    protected int positionIntoWinList = -1;//-1 - если позиция заявления не выигрывает в конкурсе
     protected Claim(){}
     public Claim(User user, Direction direction, ClaimType claimType) {
         //validateKey(user,direction);
@@ -198,5 +200,10 @@ public class Claim implements Comparable<Claim>
             }
             return 0;
         }
+    }
+
+    public void setPositionIntoWinList(int positionIntoWinList)
+    {
+        this.positionIntoWinList = positionIntoWinList;
     }
 }

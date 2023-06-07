@@ -52,13 +52,10 @@ public class LoadEntities {
         }
         enrollmentUserIntoDirectionsFirstStage(userCollection);
         enrollmentUserIntoDirectionsSecondStage(userCollection);
-
-
-
-
-
-
-
+        for(Direction d : directions)
+        {
+            d.initWinClaimPosition();
+        }
         for(User u : userCollection)
         {
             userSerivce.save(u);

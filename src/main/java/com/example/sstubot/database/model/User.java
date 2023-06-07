@@ -103,16 +103,26 @@ public class User
     public Claim getWinClaim() {
         return winClaim;
     }
-
-    public void setWinClaim(Claim winClaim) {
+    private void deleteWinClaim()
+    {
         if(this.winClaim != null)
         {
             this.winClaim.setWin(false);
+            this.winClaim.positionIntoWinList = -1;
             this.winClaim.getDirection().deleteClaim(this.winClaim);
         }
+        this.winClaim = null;
+    }
+
+    public void setWinClaim(Claim winClaim, int positionId) {
+        deleteWinClaim();
         this.winClaim = winClaim;
-        if(this.winClaim != null)
+        if(winClaim != null)
+        {
+            if(winClaim.isWin)
+                throw new RuntimeException("Данное заявление уже выигрышное...");
             this.winClaim.setWin(true);
+        }
     }
 
     public void sortClaim()
@@ -222,5 +232,4 @@ public class User
     public List<Claim> getSortedClaims() {
         return sortedClaims;
     }
-
 }

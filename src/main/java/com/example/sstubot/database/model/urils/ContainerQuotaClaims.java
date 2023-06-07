@@ -48,12 +48,14 @@ public class ContainerQuotaClaims implements ClaimContainer
             - если нет заявок - пользователь добавляется в очередь - return null
          */
         Claim removedClaim = null;
+        //Если список пуст
         if((maxSize > currentSize()) && (currentSize() == 0))
         {
             claims.add(claim);
             User user = claim.getUser();
-            user.setWinClaim(claim);
+            user.setWinClaim(claim,claims.indexOf(claim));
         }
+        //Если есть свободные места
         else if(maxSize > currentSize())
         {
             ListIterator<Claim> iterator = claims.listIterator();
@@ -74,6 +76,7 @@ public class ContainerQuotaClaims implements ClaimContainer
             //Добавить в конец
             if(!isAdded)
             {
+                i = claims.size() - 1;
                 claims.add(claim);
             }
             else
@@ -81,7 +84,7 @@ public class ContainerQuotaClaims implements ClaimContainer
                 claims.add(i,claim);
             }
             User user = claim.getUser();
-            user.setWinClaim(claim);
+            user.setWinClaim(claim, claims.indexOf(claim));
         }
         else
         {
@@ -101,9 +104,9 @@ public class ContainerQuotaClaims implements ClaimContainer
             }
             claims.add(i,claim);
             User user = claim.getUser();
-            user.setWinClaim(claim);
+            user.setWinClaim(claim,claims.indexOf(claim));
             claims.remove(removedClaim);
-            removedClaim.getUser().setWinClaim(null);
+            removedClaim.getUser().setWinClaim(null, 0);
         }
         refreshMinScore();
         return removedClaim;
@@ -163,5 +166,14 @@ public class ContainerQuotaClaims implements ClaimContainer
             throw new RuntimeException("Данной заявки нет в списке");
         claims.remove(claim);
         refreshMinScore();
+    }
+
+    public void initWinClaimPosition()
+    {
+        Iterator<Claim> iter = claims.iterator();
+        for(int i = 0; iter.hasNext();i++)
+        {
+            iter.next().setPositionIntoWinList(i);
+        }
     }
 }

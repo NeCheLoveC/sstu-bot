@@ -344,4 +344,12 @@ public class Direction {
                 throw new RuntimeException("Не распознан тип заявки... (INTO switch/case");
         }
     }
+
+    public void initWinClaimPosition()
+    {
+        budgetTargetQuotaClaims.initWinClaimPosition();
+        budgetSpecialQuotaClaims.initWinClaimPosition();
+        budgetUnusualQuotaClaims.initWinClaimPosition();
+        budgetGeneralListClaims.initWinClaimPosition();
+    }
 }
