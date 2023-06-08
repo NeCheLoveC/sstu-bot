@@ -176,4 +176,8 @@ public class ContainerQuotaClaims implements ClaimContainer
             iter.next().setPositionIntoWinList(i);
         }
     }
+
+    public int getMinScoreForAdd() {
+        return minScoreForAdd;
+    }
 }

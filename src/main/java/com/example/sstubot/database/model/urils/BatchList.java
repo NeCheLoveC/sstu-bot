@@ -1,96 +1,34 @@
-package com.example.sstubot.initial;
+package com.example.sstubot.database.model.urils;
 
 import com.example.sstubot.database.model.Claim;
 import com.example.sstubot.database.model.Direction;
 import com.example.sstubot.database.model.User;
-import com.example.sstubot.database.model.urils.ClaimType;
-import com.example.sstubot.database.model.urils.ContainerQuotaClaims;
-import com.example.sstubot.database.service.ClaimService;
-import com.example.sstubot.database.service.DirectionService;
-import com.example.sstubot.database.service.InstituteService;
-import com.example.sstubot.database.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.Transient;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
 
-@Component
-public class LoadEntities {
-    protected DirectionLoad directionLoad;
-    protected LoadManager loadManager;
-    protected InstituteService instituteService;
-    protected DirectionService directionService;
-    protected UserService userSerivce;
-    @Autowired
-    protected ClaimService claimService;
+public class BatchList
+{
+    private GeneralListContainer budgetGeneralListClaims;
 
-    @Autowired
-    public LoadEntities(DirectionLoad directionLoad, LoadManager loadManager, InstituteService instituteService, DirectionService directionService, UserService userSerivce) {
-        this.directionLoad = directionLoad;
-        this.loadManager = loadManager;
-        this.instituteService = instituteService;
-        this.directionService = directionService;
-        this.userSerivce = userSerivce;
-    }
+    private ContainerQuotaClaims budgetSpecialQuotaClaims; //= new ContainerQuotaClaims(amountSpecialQuota, ClaimType.BUDGET_SPECIAL_QUOTA);
 
-    @Transactional
-    public void load() throws IOException
+    private ContainerQuotaClaims budgetTargetQuotaClaims;// = new ContainerQuotaClaims(amountTargetQuota, ClaimType.BUDGET_TARGET_QUOTA);
+
+    private ContainerQuotaClaims budgetUnusualQuotaClaims;// = new ContainerQuotaClaims(amountUnusualQuota, ClaimType.BUDGET_UNUSUAL_QUOTA);
+
+    private ContainerCommerce commerceGeneralListClaims;
+
+    public BatchList(int amountUnusualQuota,int amountSpecialQuota,int amountTargetQuota,int amountMainBudgetIntoPlan)
     {
-        if(instituteService.countInstance() == 0)
-            directionLoad.load(); // Загрузка институтов с направлениями
-        List<Direction> directionList = directionService.getAllDirection();
-        Map<String, Direction> directionHashMap = getMapDirectionsFromList(directionList);
-        Map<String, User> userMap = this.loadManager.loadClaims(directionHashMap,directionList);
-        Collection<User> userCollection = sortClaimsIntoUsers(userMap.values());
-        List<Direction> directions = directionService.getAllDirection();
-        for(Direction d : directions)
-        {
-            d.initContainers();
-        }
-        enrollmentUserIntoDirectionsFirstStage(userCollection);
-        enrollmentUserIntoDirectionsSecondStage(userCollection);
-        for(Direction d : directions)
-        {
-            d.initWinClaimPositionAndMinSocre();
-        }
-        for(User u : userCollection)
-        {
-            userSerivce.save(u);
-        }
-    }
-
-    private Map<String, Direction> getMapDirectionsFromList(List<Direction> directions)
-    {
-        Map<String, Direction> directionMap = new HashMap<>();
-        for(Direction d : directions)
-        {
-            directionMap.put(d.getUrlToListOfClaims(),d);
-            directionMap.put(d.getUrlToListOfClaimsCommerce(),d);
-        }
-        return directionMap;
-    }
-    @Transactional
-    protected void clearLastTry(UserService userService)
-    {
-        userService.clearAll();
-    }
-
-    @Transactional
-    protected Collection<User> sortClaimsIntoUsers(Collection<User> users)
-    {
-        for(User user : users)
-        {
-            user.sortClaim();
-        }
-        return users;
-    }
-    @Transactional
-    protected void enrollUser(Collection<User> users)
-    {
-        enrollmentUserIntoDirectionsFirstStage(users);
+        this.budgetUnusualQuotaClaims = new ContainerQuotaClaims(amountUnusualQuota, ClaimType.BUDGET_UNUSUAL_QUOTA);
+        this.budgetSpecialQuotaClaims = new ContainerQuotaClaims(amountSpecialQuota, ClaimType.BUDGET_SPECIAL_QUOTA);
+        this.budgetTargetQuotaClaims = new ContainerQuotaClaims(amountTargetQuota, ClaimType.BUDGET_TARGET_QUOTA);
+        this.commerceGeneralListClaims = new ContainerCommerce();
+        this.budgetGeneralListClaims = new GeneralListContainer(() -> {return this.budgetTargetQuotaClaims.currentSize() + this.budgetSpecialQuotaClaims.currentSize() + this.budgetUnusualQuotaClaims.currentSize();}, amountMainBudgetIntoPlan);
     }
     protected void enrollmentUserIntoDirectionsFirstStage(Collection<User> users)
     {
@@ -212,10 +150,6 @@ public class LoadEntities {
                     }
                     if(canAdd)
                         count++;
-                    /*
-                    if(claim != null)
-                        iter.add(claim.getUser());
-                     */
                 }
             }
             if(count == 0)
@@ -229,7 +163,6 @@ public class LoadEntities {
                 count = 0;
             }
         }
-        //Set<Direction> directions = new HashSet<>();
     }
 
     private boolean validateClaimTypeForFirstStage(Claim claim)

@@ -68,6 +68,14 @@ public class Direction {
     @Column(name = "direction_type_payment")
     protected DirectionType directionTypePayment;
      */
+    @Column(nullable = true)
+    protected Integer minScoreGeneralList = null;
+    @Column(nullable = true)
+    protected Integer minScoreTargetList = null;
+    @Column(nullable = true)
+    protected Integer minScoreUnusualList = null;
+    @Column(nullable = true)
+    protected Integer minScoreSpecialList = null;
     @OneToMany(mappedBy = "direction")
     private List<Claim> allClaims = new LinkedList<>();
     @Transient
@@ -345,11 +353,20 @@ public class Direction {
         }
     }
 
-    public void initWinClaimPosition()
+    public void initWinClaimPositionAndMinSocre()
     {
         budgetTargetQuotaClaims.initWinClaimPosition();
         budgetSpecialQuotaClaims.initWinClaimPosition();
         budgetUnusualQuotaClaims.initWinClaimPosition();
         budgetGeneralListClaims.initWinClaimPosition();
+
+        if(amountMainBudgetIntoPlan != 0)
+            this.minScoreGeneralList = budgetGeneralListClaims.getMinScoreForAdd();
+        if(amountSpecialQuota != 0)
+            this.minScoreSpecialList = budgetSpecialQuotaClaims.getMinScoreForAdd();
+        if(amountTargetQuota != 0)
+            this.minScoreTargetList = budgetTargetQuotaClaims.getMinScoreForAdd();
+        if(amountUnusualQuota != 0)
+            this.minScoreUnusualList = budgetUnusualQuotaClaims.getMinScoreForAdd();
     }
 }

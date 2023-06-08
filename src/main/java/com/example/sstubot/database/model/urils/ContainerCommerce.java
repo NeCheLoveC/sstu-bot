@@ -72,4 +72,6 @@ public class ContainerCommerce
             throw new RuntimeException("Данной заявки нет в списке");
         claims.remove(claim);
     }
+
+
 }
