@@ -369,4 +369,34 @@ public class Direction {
         if(amountUnusualQuota != 0)
             this.minScoreUnusualList = budgetUnusualQuotaClaims.getMinScoreForAdd();
     }
+
+    public void enrollClaimWithoutOrigDoc(Claim claim)
+    {
+        if(claim.getDirection() != this)
+            throw new RuntimeException("ошибка в enrollClaimWithoutDoc");
+        if(claim.claimWithOriginalDoc())
+            throw new RuntimeException("ошибка в enrollClaimWithoutDoc");
+
+        switch (claim.getClaimType())
+        {
+            case BUDGET_SPECIAL_QUOTA:
+                budgetSpecialQuotaClaims.removeClaimFromList(claim);
+                break;
+            case BUDGET_TARGET_QUOTA:
+                budgetTargetQuotaClaims.removeClaimFromList(claim);
+                break;
+            case BUDGET_UNUSUAL_QUOTA:
+                budgetUnusualQuotaClaims.removeClaimFromList(claim);
+                break;
+            case BUDGET_GENERAL_LIST:
+                budgetGeneralListClaims.removeClaimFromList(claim);
+                break;
+            case COMMERCE_GENERAL_LIST:
+                commerceGeneralListClaims.removeClaimFromList(claim);
+                break;
+            default:
+                throw new RuntimeException("Не распознан тип заявки... (INTO switch/case");
+        }
+
+    }
 }

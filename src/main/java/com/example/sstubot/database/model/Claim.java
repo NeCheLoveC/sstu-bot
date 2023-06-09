@@ -206,4 +206,16 @@ public class Claim implements Comparable<Claim>
     {
         this.positionIntoWinList = positionIntoWinList;
     }
+
+    public void enrollWithoutOriginalDoc()
+    {
+        if(this.getUser().isOriginalDocuments())
+            throw new RuntimeException("Данный абитуриент имеет оригинал...");
+        direction.enrollClaimWithoutOrigDoc(this);
+    }
+
+    public boolean claimWithOriginalDoc()
+    {
+        return this.user.isOriginalDocuments();
+    }
 }

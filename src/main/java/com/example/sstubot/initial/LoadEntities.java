@@ -46,21 +46,40 @@ public class LoadEntities {
         Map<String, User> userMap = this.loadManager.loadClaims(directionHashMap,directionList);
         Collection<User> userCollection = sortClaimsIntoUsers(userMap.values());
         List<Direction> directions = directionService.getAllDirection();
+
         for(Direction d : directions)
         {
             d.initContainers();
         }
+
         enrollmentUserIntoDirectionsFirstStage(userCollection);
         enrollmentUserIntoDirectionsSecondStage(userCollection);
+        enrollmentUserWithoutOriginalDoc(userCollection);
+
         for(Direction d : directions)
         {
             d.initWinClaimPositionAndMinSocre();
         }
+
         for(User u : userCollection)
         {
             userSerivce.save(u);
         }
     }
+
+    private void enrollmentUserWithoutOriginalDoc(Collection<User> users)
+    {
+        users = users.stream().filter((user) -> !user.isOriginalDocuments()).toList();
+
+        for(User user : users)
+        {
+            for(Claim claim : user.getSortedClaims())
+            {
+                claim.enrollWithoutOriginalDoc();
+            }
+        }
+    }
+
 
     private Map<String, Direction> getMapDirectionsFromList(List<Direction> directions)
     {

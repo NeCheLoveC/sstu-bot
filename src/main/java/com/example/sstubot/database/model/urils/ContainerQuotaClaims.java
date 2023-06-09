@@ -180,4 +180,28 @@ public class ContainerQuotaClaims implements ClaimContainer
     public int getMinScoreForAdd() {
         return minScoreForAdd;
     }
+
+    public void enrollClaimWithoutOrigDoc(Claim claim)
+    {
+         Iterator<Claim> iter = claims.iterator();
+         boolean flag = false;
+         for(int i = 0;iter.hasNext();i++)
+         {
+             Claim c = iter.next();
+             int resultOfCompare = claim.compareTo(c);
+             if(resultOfCompare < 0)
+             {
+                 claim.setPositionIntoWinList(i);
+                 flag = true;
+                 break;
+             }
+         }
+         if(!flag)
+         {
+             if(currentSize() < maxSize)
+             {
+                 claim.setPositionIntoWinList(currentSize());
+             }
+         }
+    }
 }
