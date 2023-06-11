@@ -189,7 +189,7 @@ public class ContainerQuotaClaims implements ClaimContainer
          {
              Claim c = iter.next();
              int resultOfCompare = claim.compareTo(c);
-             if(resultOfCompare < 0)
+             if(resultOfCompare > 0)
              {
                  claim.setPositionIntoWinList(i);
                  flag = true;

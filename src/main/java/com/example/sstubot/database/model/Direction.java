@@ -380,19 +380,19 @@ public class Direction {
         switch (claim.getClaimType())
         {
             case BUDGET_SPECIAL_QUOTA:
-                budgetSpecialQuotaClaims.removeClaimFromList(claim);
+                budgetSpecialQuotaClaims.enrollClaimWithoutOrigDoc(claim);
                 break;
             case BUDGET_TARGET_QUOTA:
-                budgetTargetQuotaClaims.removeClaimFromList(claim);
+                budgetTargetQuotaClaims.enrollClaimWithoutOrigDoc(claim);
                 break;
             case BUDGET_UNUSUAL_QUOTA:
-                budgetUnusualQuotaClaims.removeClaimFromList(claim);
+                budgetUnusualQuotaClaims.enrollClaimWithoutOrigDoc(claim);
                 break;
             case BUDGET_GENERAL_LIST:
-                budgetGeneralListClaims.removeClaimFromList(claim);
+                budgetGeneralListClaims.enrollClaimWithoutOrigDoc(claim);
                 break;
             case COMMERCE_GENERAL_LIST:
-                commerceGeneralListClaims.removeClaimFromList(claim);
+                //commerceGeneralListClaims.e(claim);
                 break;
             default:
                 throw new RuntimeException("Не распознан тип заявки... (INTO switch/case");
