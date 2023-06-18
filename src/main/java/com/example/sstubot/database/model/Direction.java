@@ -50,6 +50,9 @@ public class Direction {
     @Column(name = "amount_main_budget_plan")
     protected int amountMainBudgetIntoPlan = 0;
 
+    @Column(name = "amount_budget_after_first_stage")
+    protected int amountBudgetAfterFirstStage = 0;
+
     @Column(name = "abbreviation")
     protected String abbreviation;
 
@@ -355,10 +358,17 @@ public class Direction {
 
     public void initWinClaimPositionAndMinSocre()
     {
+        this.minScoreTargetList = budgetTargetQuotaClaims.getMinScoreForAdd();
+        this.minScoreSpecialList = budgetSpecialQuotaClaims.getMinScoreForAdd();
+        this.minScoreUnusualList = budgetUnusualQuotaClaims.getMinScoreForAdd();
+        this.minScoreGeneralList = budgetGeneralListClaims.getMinScoreForAdd();
+
+
         budgetTargetQuotaClaims.initWinClaimPosition();
         budgetSpecialQuotaClaims.initWinClaimPosition();
         budgetUnusualQuotaClaims.initWinClaimPosition();
         budgetGeneralListClaims.initWinClaimPosition();
+        this.amountBudgetAfterFirstStage = this.amountMainBudgetIntoPlan - (this.budgetSpecialQuotaClaims.currentSize() + this.budgetUnusualQuotaClaims.currentSize() + this.budgetTargetQuotaClaims.currentSize());
 
         if(amountMainBudgetIntoPlan != 0)
             this.minScoreGeneralList = budgetGeneralListClaims.getMinScoreForAdd();

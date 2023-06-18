@@ -21,6 +21,9 @@ public class Claim implements Comparable<Claim>
     @MapsId(value = "directionId")
     protected Direction direction;
 
+    @Column(name = "priority_into_user_list")
+    protected int priorityIntoUserList;
+
     @Column(name = "countScore_for_individual_achievements")
     protected int countScoreForIndividualAchievements = 0;
 
@@ -212,6 +215,11 @@ public class Claim implements Comparable<Claim>
         if(this.getUser().isOriginalDocuments())
             throw new RuntimeException("Данный абитуриент имеет оригинал...");
         direction.enrollClaimWithoutOrigDoc(this);
+    }
+
+    public void setPriorityIntoUserList(int position)
+    {
+        priorityIntoUserList = position;
     }
 
     public boolean claimWithOriginalDoc()

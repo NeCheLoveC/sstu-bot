@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Entity
-@Table(indexes = {@Index(unique = true, columnList = "unique_code")}, name = "userrrr")
+@Table(indexes = {@Index(unique = true, columnList = "unique_code")}, name = "\"user\"")
 public class User
 {
     @Id
@@ -27,20 +27,6 @@ public class User
     @JoinColumn(name = "user_id")
     @OrderColumn(name = "claim_position")
     protected List<ClaimPriorities> priorities = new LinkedList<>();
-
-    /*
-    @JoinTable(
-            name = "user_win_claim",
-            joinColumns =
-            @JoinColumn(name = "user_id"),
-            inverseJoinColumns = {
-                    @JoinColumn(name = "claim_user_id", referencedColumnName = "user_id"),
-                    @JoinColumn(name = "direction_id", referencedColumnName = "direction_id"),
-                    @JoinColumn(name = "claim_type", referencedColumnName = "claim_type"),
-            }
-    )
-    */
-    // TODO: 31.05.2023 РЕАЛИЗОВАТЬ ссылку на составной первичный ключ
 
     @ManyToOne
     @JoinColumns({
@@ -136,7 +122,13 @@ public class User
 
         this.sortedClaims = actualClaimsOrder;
 
+        for(int i = 0;i < sortedClaims.size();i++)
+        {
+            claims.get(i).setPriorityIntoUserList(i);
+        }
     }
+
+
     private List<Claim> getClaimsForSecondStage(List<ClaimPriorities> newClaimPriorities)
     {
         List<Claim> claimList = new LinkedList<>();
